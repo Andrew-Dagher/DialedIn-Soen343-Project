@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const QuotationPage = () => {
     const [tempRequestID, setTempRequestID] = useState(null);
     const [requestData, setRequestData] = useState({});
+    const router = useRouter();
 
     useEffect(() => {
-        // Now we Retrieve data from localStorage so we can fetch it between forms
+        // Retrieve data from localStorage to persist between forms
         const storedRequestID = localStorage.getItem("tempRequestID");
         const storedRequestData = localStorage.getItem("requestData");
 
@@ -17,19 +19,27 @@ const QuotationPage = () => {
         }
     }, []);
 
-    //This is just a mock to show that we can actually retrieve the data after payment
+    // Mock payment handling with localStorage and navigation to Payment page
     const handleMockPayment = () => {
         if (!tempRequestID) {
             alert("No temporary request ID found. Please submit a delivery request first.");
             return;
         }
 
+        const mockAmount = 125.50; // Mock amount for payment
         console.log("Payment completed. Final Delivery Request ID:", tempRequestID);
         console.log("Delivery request details:", requestData);
 
-        // Clear data after payment
-        localStorage.removeItem("tempRequestID");
-        localStorage.removeItem("requestData");
+
+        // Store the mock amount in localStorage for use on the PaymentPage
+        localStorage.setItem("tempAmount", mockAmount);
+
+        // Navigate to Payment page and pass the request ID as a query parameter
+        router.push(`/payment?request=${tempRequestID}`);
+
+          // Clear data after payment
+          localStorage.removeItem("tempRequestID");
+          localStorage.removeItem("requestData");
     };
 
     return (

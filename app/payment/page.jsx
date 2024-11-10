@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -7,7 +7,7 @@ import axios from 'axios';
 const PaymentPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const reservation = searchParams.get('request'); // Get request ID from URL
+  const request = searchParams.get('request');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [paymentDetails, setPaymentDetails] = useState({
@@ -18,25 +18,22 @@ const PaymentPage = () => {
   const [totalPayment, setTotalPayment] = useState(null);
 
   useEffect(() => {
-    if (!reservation) {
-      console.error('No reservation ID provided');
-      setError('No reservation ID provided');
-      return;
+    // Retrieve amount from localStorage if available
+    const storedAmount = localStorage.getItem("tempAmount");
+
+    if (request && storedAmount) {
+      setTotalPayment(parseFloat(storedAmount));
+    } else {
+      console.error("No request ID or amount found");
+      setError("No request ID or amount found");
     }
-    const fetchReservationDetails = async () => {
-      try {
-        const response = await axios.post('/api/lookup_reservation', { reservationID: reservation });
+  }, [request]);
 
-        if (response.data && response.data.reservationDetails) {
-          setTotalPayment(response.data.reservationDetails.totalPayment);
-        }
-      } catch (error) {
-        console.error('Error fetching reservation details:', error);
-      }
-    };
+  const validateCardNumber = (number) => number.length === 16 && /^\d+$/.test(number);
 
-    fetchReservationDetails();
-  }, [reservation]);
+  const validateExpiryDate = (date) => /^(0[1-9]|1[0-2])\/\d{2}$/.test(date);
+
+  const validateCVV = (cvv) => cvv.length === 3 && /^\d+$/.test(cvv);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,6 +45,9 @@ const PaymentPage = () => {
     setError('');
     setSuccess('');
 
+
+
+    
     // Validate input fields
     if (!validateCardNumber(paymentDetails.cardNumber)) {
       setError('Credit card number must be 16 numerical digits.');
@@ -61,30 +61,25 @@ const PaymentPage = () => {
       setError('CVV must be 3 numerical digits.');
       return;
     }
-
+    console.log(request +"hehehe");
     try {
       // Call to API endpoint to save payment information in the database
-      const response = await axios.post('/api/update_paymentDetails', {
-        deliveryId: reservation, // Map reservation ID to deliveryId
+      const response = await axios.post('/api/payment', {
+        requestID: request,
         paymentInfo: {
           cardNumber: paymentDetails.cardNumber,
           expiryDate: paymentDetails.expiryDate,
           cvv: paymentDetails.cvv,
         },
+        amount: totalPayment,
       });
 
       if (response.status === 200 && response.data.success) {
         setSuccess('Payment authorized. Your payment has been successfully processed.');
         setPaymentDetails({ cardNumber: '', expiryDate: '', cvv: '' });
 
-        // Optional: Send email confirmation
-        await axios.post('/api/email_confirmation', {
-          recipientEmail: email, // Replace with actual email
-          recipientName: first_name, // Replace with actual first name
-          reservationID: reservation,
-        });
+        console.log('Payment successful. Your payment has been successfully processed');
 
-        router.push('/managereservation');
       } else {
         setError('Payment authorization failed. Please try again.');
       }
@@ -99,7 +94,7 @@ const PaymentPage = () => {
       {error && <p className="error">{error}</p>}
       {success && <p className="success">{success}</p>}
       <div className="form">
-        {totalPayment !== null && <p className="totalPayment">Total Payment: ${totalPayment}</p>}
+        {totalPayment !== null && <p className="totalPayment">Total Payment: ${totalPayment.toFixed(2)}</p>}
         <input
           className="input"
           placeholder="Card Number"
@@ -128,6 +123,62 @@ const PaymentPage = () => {
           Submit Payment
         </button>
       </div>
+
+      <style jsx>{`
+        .container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          background-color: #f2f2f2;
+        }
+        .form {
+          max-width: 400px;
+          width: 100%;
+          padding: 2rem;
+          background-color: white;
+          border-radius: 8px;
+          box-shadow: 0px 0px 20px 0px rgba(0,0,0,0.1);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        .input {
+          margin-bottom: 1.5rem;
+          width: 100%;
+          padding: 0.5rem;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+        }
+        .button {
+          margin-top: 1.5rem;
+          padding: 0.75rem;
+          width: 100%;
+          background-color: #0070f3;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+        .button:hover {
+          background-color: #005bb5;
+        }
+        .totalPayment {
+          margin-bottom: 2rem;
+          color: #333;
+          font-size: 1.5rem;
+          font-weight: bold;
+        }
+        .success {
+          color: green;
+          margin-bottom: 1.5rem;
+        }
+        .error {
+          color: red;
+          margin-bottom: 1.5rem;
+        }
+      `}</style>
     </div>
   );
 };
