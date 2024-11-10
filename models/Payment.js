@@ -12,7 +12,7 @@ const PaymentSchema = new Schema({
   paymentMethod: {
     type: String,
     required: true,
-    enum: ['credit_card', 'debit_card', 'paypal', 'bank_transfer', 'other']
+    enum: ['credit_card', 'debit']
   },
   amount: {
     type: Number,

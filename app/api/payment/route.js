@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectToDatabase from '../../../utils/mongodb';
-import Client from '../../../models/Client';
-import Payment from '../../../models/Payment';
-import { v4 as uuidv4 } from 'uuid'; // To generate unique paymentID
+import PaymentService from '../../../services/PaymentService';
 
 export async function POST(request) {
   await connectToDatabase(); // Ensure the database is connected
@@ -14,7 +12,7 @@ export async function POST(request) {
   }
 
   try {
-    // 1. Update Client with payment information using requestID instead of _id
+     // 1. Update Client with payment information using requestID instead of _id
     // const client = await Client.findOneAndUpdate(
     //   { requestID: requestID }, // Change _id to requestID
     //   { $set: { paymentInfo } },
@@ -25,24 +23,14 @@ export async function POST(request) {
     //   return NextResponse.json({ error: 'Client not found' }, { status: 404 });
     // }
 
-    // 2. Create a new payment log in the Payment collection
-    const payment = new Payment({
-      paymentID: uuidv4(), // Generate a unique payment ID
-      requestID: requestID, 
-      paymentMethod: 'credit_card',
-      amount: amount,
-      status: 'completed', // Set to completed or pending as per your requirements
-      transactionDate: new Date(),
-    });
 
+    // Instantiate PaymentService with the appropriate payment method
+    const paymentService = new PaymentService(paymentInfo.paymentMethod);
+    const payment = await paymentService.processPayment(amount, requestID, paymentInfo);
 
-    await payment.save(); // Save payment log
-
-    // Respond with success
     return NextResponse.json({ success: true, payment });
-    // return NextResponse.json({ success: true, client, payment });
   } catch (error) {
-    console.error("Error updating client payment details:", error);
+    console.error("Error processing payment:", error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

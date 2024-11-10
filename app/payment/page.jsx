@@ -10,6 +10,7 @@ const PaymentPage = () => {
   const request = searchParams.get('request');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('credit_card'); // Default to credit card
   const [paymentDetails, setPaymentDetails] = useState({
     cardNumber: '',
     expiryDate: '',
@@ -30,9 +31,7 @@ const PaymentPage = () => {
   }, [request]);
 
   const validateCardNumber = (number) => number.length === 16 && /^\d+$/.test(number);
-
   const validateExpiryDate = (date) => /^(0[1-9]|1[0-2])\/\d{2}$/.test(date);
-
   const validateCVV = (cvv) => cvv.length === 3 && /^\d+$/.test(cvv);
 
   const handleChange = (e) => {
@@ -40,15 +39,15 @@ const PaymentPage = () => {
     setPaymentDetails({ ...paymentDetails, [name]: value });
   };
 
+  const handlePaymentMethodChange = (e) => {
+    setPaymentMethod(e.target.value);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
-
-
-    
-    // Validate input fields
     if (!validateCardNumber(paymentDetails.cardNumber)) {
       setError('Credit card number must be 16 numerical digits.');
       return;
@@ -61,7 +60,7 @@ const PaymentPage = () => {
       setError('CVV must be 3 numerical digits.');
       return;
     }
-    console.log(request +"hehehe");
+
     try {
       // Call to API endpoint to save payment information in the database
       const response = await axios.post('/api/payment', {
@@ -70,6 +69,7 @@ const PaymentPage = () => {
           cardNumber: paymentDetails.cardNumber,
           expiryDate: paymentDetails.expiryDate,
           cvv: paymentDetails.cvv,
+          paymentMethod: paymentMethod,  // Pass selected payment method
         },
         amount: totalPayment,
       });
@@ -77,9 +77,7 @@ const PaymentPage = () => {
       if (response.status === 200 && response.data.success) {
         setSuccess('Payment authorized. Your payment has been successfully processed.');
         setPaymentDetails({ cardNumber: '', expiryDate: '', cvv: '' });
-
         console.log('Payment successful. Your payment has been successfully processed');
-
       } else {
         setError('Payment authorization failed. Please try again.');
       }
@@ -95,6 +93,12 @@ const PaymentPage = () => {
       {success && <p className="success">{success}</p>}
       <div className="form">
         {totalPayment !== null && <p className="totalPayment">Total Payment: ${totalPayment.toFixed(2)}</p>}
+        
+        <select className="input" value={paymentMethod} onChange={handlePaymentMethodChange}>
+          <option value="credit_card">Credit Card</option>
+          <option value="debit">Debit Card</option>
+        </select>
+
         <input
           className="input"
           placeholder="Card Number"
