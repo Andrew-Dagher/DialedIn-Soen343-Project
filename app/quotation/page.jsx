@@ -1,44 +1,51 @@
-"use client"
-//Temporati quoatation page
-import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import DeliveryRequestService from '../../services/DeliveryRequestService';
+"use client";
 
-const Quotation = () => {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const requestId = searchParams.get('requestId');
-    const [quotation, setQuotation] = useState(null);
+import { useEffect, useState } from 'react';
+
+const QuotationPage = () => {
+    const [tempRequestID, setTempRequestID] = useState(null);
+    const [requestData, setRequestData] = useState({});
 
     useEffect(() => {
-        const fetchQuotation = async () => {
-            try {
-                const service = DeliveryRequestService.getInstance();
-                const result = await service.getQuotation(requestId);
-                setQuotation(result);
-            } catch (error) {
-                console.error("Failed to retrieve quotation:", error);
-            }
-        };
+        // Now we Retrieve data from localStorage so we can fetch it between forms
+        const storedRequestID = localStorage.getItem("tempRequestID");
+        const storedRequestData = localStorage.getItem("requestData");
 
-        if (requestId) {
-            fetchQuotation();
+        if (storedRequestID && storedRequestData) {
+            setTempRequestID(storedRequestID);
+            setRequestData(JSON.parse(storedRequestData));
         }
-    }, [requestId]);
+    }, []);
+
+    //This is just a mock to show that we can actually retrieve the data after payment
+    const handleMockPayment = () => {
+        if (!tempRequestID) {
+            alert("No temporary request ID found. Please submit a delivery request first.");
+            return;
+        }
+
+        console.log("Payment completed. Final Delivery Request ID:", tempRequestID);
+        console.log("Delivery request details:", requestData);
+
+        // Clear data after payment
+        localStorage.removeItem("tempRequestID");
+        localStorage.removeItem("requestData");
+    };
 
     return (
         <div className="container">
-            <h1>Quotation and Payment</h1>
-            {quotation ? (
+            <h1>Quotation Page</h1>
+            {tempRequestID ? (
                 <div>
-                    <p>Estimated Cost: {quotation.estimatedCost}</p>
-                    <button className="btn btn-primary">Proceed to Payment</button>
+                    <h3>Temporary Request ID: {tempRequestID}</h3>
+                    <pre>{JSON.stringify(requestData, null, 2)}</pre>
+                    <button onClick={handleMockPayment} className="btn btn-primary">Complete Payment</button>
                 </div>
             ) : (
-                <p>Loading quotation details... temporary</p>
+                <p>No delivery request data found.</p>
             )}
         </div>
     );
 };
 
-export default Quotation;
+export default QuotationPage;

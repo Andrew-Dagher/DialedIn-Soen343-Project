@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DeliveryRequestService from '../services/DeliveryRequestService';
+import { height } from '@fortawesome/free-solid-svg-icons/fa0';
 
 const RequestDeliveryForm = () => {
     const router = useRouter();
@@ -16,7 +17,9 @@ const RequestDeliveryForm = () => {
         postalCode: '',
         city: '',
         packageType: '',
-        dimensions: '',
+        width: '',
+        length: '',
+        height: '',
         weight: '',
         serviceType: '',
         pickUpLocation: '',
@@ -32,7 +35,7 @@ const RequestDeliveryForm = () => {
             case 1:
                 return formData.contactName && formData.phoneNumber && formData.email && formData.country && formData.addressLine && formData.postalCode && formData.city;
             case 2:
-                return formData.packageType && formData.dimensions && formData.weight;
+                return formData.packageType && formData.width && formData.length && formData.height && formData.weight;
             case 3:
                 return formData.serviceType;
             case 4:
@@ -58,32 +61,18 @@ const RequestDeliveryForm = () => {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        const data = {
-            contactName: formData.contactName,
-            phoneNumber: formData.phoneNumber,
-            email: formData.email,
-            country: formData.country,
-            addressLine: formData.addressLine,
-            postalCode: formData.postalCode,
-            city: formData.city,
-            packageType: formData.packageType,
-            dimensions: formData.dimensions,
-            weight: formData.weight,
-            serviceType: formData.serviceType,
-            pickUpLocation: formData.pickUpLocation,
-            notificationPreference: formData.notificationPreference,
-        };
-    
+        const data = { ...formData };
+
         try {
             const deliveryService = DeliveryRequestService.getInstance();
             const response = await deliveryService.createTemporaryDeliveryRequest(data);
-    
-            const requestId = response.requestId; // Get requestId from response
-            if (requestId) {
-                router.push(`/quotation?requestId=${requestId}`);
-            } else {
-                console.error("No requestId found in API response.");
-            }
+
+            // Save data to localStorage
+            localStorage.setItem("tempRequestID", response.requestId);
+            localStorage.setItem("requestData", JSON.stringify(data));
+
+            // Redirect to quotation page
+            router.push('/quotation');
         } catch (error) {
             console.error("Error in submitting delivery request:", error);
         }
@@ -152,11 +141,19 @@ const RequestDeliveryForm = () => {
                                 <input type="text" className="form-control" value={formData.packageType} onChange={(e) => handleChange('packageType', e.target.value)} required />
                             </div>
                             <div className="form-group">
-                                <label>Dimensions *</label>
-                                <input type="text" className="form-control" value={formData.dimensions} onChange={(e) => handleChange('dimensions', e.target.value)} required />
+                                <label>Width (cm) *</label>
+                                <input type="number" className="form-control" value={formData.width} onChange={(e) => handleChange('width', e.target.value)} required />
                             </div>
                             <div className="form-group">
-                                <label>Weight *</label>
+                                <label>Length (cm) *</label>
+                                <input type="number" className="form-control" value={formData.length} onChange={(e) => handleChange('length', e.target.value)} required />
+                            </div>
+                            <div className="form-group">
+                                <label>Height (cm) *</label>
+                                <input type="number" className="form-control" value={formData.height} onChange={(e) => handleChange('height', e.target.value)} required />
+                            </div>
+                            <div className="form-group">
+                                <label>Weight kg *</label>
                                 <input type="number" className="form-control" value={formData.weight} onChange={(e) => handleChange('weight', e.target.value)} required />
                             </div>
                             <button className="btn btn-secondary mr-2" onClick={prevStep}>Back</button>
