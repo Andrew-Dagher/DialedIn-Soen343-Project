@@ -1,4 +1,4 @@
-'use  client';
+'use client';
 
 import React, { useState } from 'react';
 import {
@@ -36,6 +36,11 @@ const NavBar = () => {
                 <PageLink href="/" className="nav-link" testId="navbar-home">
                   Home
                 </PageLink>
+              </NavItem>
+              <NavItem>
+                  <PageLink href="/request-delivery" className="nav-link" testId="navbar-request-delivery">
+                      Request Delivery
+                  </PageLink>
               </NavItem>
               {user && (
                 <>
