@@ -12,11 +12,11 @@ export default function Page() {
     pickupCountry: '',
     pickupAddress: '',
     pickupZipcode: '',
-    pickupProvince: '',
+    pickupCity: '',
     dropoffCountry: '',
     dropoffAddress: '',
     dropoffZipcode: '',
-    dropoffProvince: '',
+    dropoffCity: '',
     shippingMethod: ''
   });
   const [quote, setQuote] = useState(null);
@@ -43,13 +43,13 @@ export default function Page() {
           country: formData.pickupCountry,
           address: formData.pickupAddress,
           zipcode: formData.pickupZipcode,
-          province: formData.pickupProvince
+          city: formData.pickupCity
         },
         dropoff: {
           country: formData.dropoffCountry,
           address: formData.dropoffAddress,
           zipcode: formData.dropoffZipcode,
-          province: formData.dropoffProvince
+          city: formData.dropoffCity
         },
         shippingMethod: formData.shippingMethod
       };

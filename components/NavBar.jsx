@@ -7,17 +7,16 @@ const tabs = [
   { name: 'home', link: '/' },
   { name: 'tracking', link: '/tracking' },
   { name: 'quotation', link: '/Quotations' },
-  { name: 'shipping', link: '/shipping' },
+  { name: 'shipping', link: '/request-delivery' },
   { name: 'login', link: '/login', logo: loginIcon }
 ];
-
 
 const NavBar = () => {
   return (
     <>
       <nav className="mx-60 mt-5 flex justify-between">
         <div>
-          <Link href="/" className="text-white hover:no-underline font-bold">
+          <Link href="/" className="font-bold text-white hover:no-underline">
             DAILEDIN
           </Link>
         </div>

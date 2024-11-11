@@ -28,8 +28,8 @@ class QuotationService {
 
     // Required fields validation
     const requiredFields = {
-      pickup: ['country', 'address', 'zipcode', 'province'],
-      dropoff: ['country', 'address', 'zipcode', 'province']
+      pickup: ['country', 'address', 'zipcode', 'city'],
+      dropoff: ['country', 'address', 'zipcode', 'city']
     };
 
     for (const [location, fields] of Object.entries(requiredFields)) {

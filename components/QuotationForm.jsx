@@ -6,7 +6,8 @@ export default function QuotationForm({ formData, setFormData, handleSubmit }) {
     setFormData(prevData => ({ ...prevData, [name]: value }));
   };
 
-  const inputClassName = "w-full border-gray-800 border-2 rounded-xl bg-transparent p-3 text-sm text-gray-100 placeholder-gray-500 transition-colors focus:border-violet-400 focus:outline-none";
+  const inputClassName =
+    'w-full border-gray-800 border-2 rounded-xl bg-transparent p-3 text-sm text-gray-100 placeholder-gray-500 transition-colors focus:border-violet-400 focus:outline-none';
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -84,9 +85,9 @@ export default function QuotationForm({ formData, setFormData, handleSubmit }) {
           />
           <input
             type="text"
-            name="pickupProvince"
-            placeholder="Province"
-            value={formData.pickupProvince}
+            name="pickupCity"
+            placeholder="City"
+            value={formData.pickupCity}
             onChange={handleChange}
             required
             className={inputClassName}
@@ -126,9 +127,9 @@ export default function QuotationForm({ formData, setFormData, handleSubmit }) {
           />
           <input
             type="text"
-            name="dropoffProvince"
-            placeholder="Province"
-            value={formData.dropoffProvince}
+            name="dropoffCity"
+            placeholder="City"
+            value={formData.dropoffCity}
             onChange={handleChange}
             required
             className={inputClassName}
