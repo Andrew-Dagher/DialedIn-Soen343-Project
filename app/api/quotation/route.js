@@ -1,7 +1,8 @@
 // app/api/quotation/route.js
 
 import { NextResponse } from 'next/server';
-import QuotationService from '../../services/QuotationService';
+import QuotationService from '../../../services/QuotationService';
+
 
 export async function POST(req) {
   try {

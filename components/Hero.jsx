@@ -8,32 +8,58 @@ import Link from 'next/link';
 
 const Hero = () => {
   return (
-    <div className="my-20 flex flex-col p-10">
-      <div className="align-items-center mx-10 mb-20 flex justify-between">
-        <div className="flex flex-col gap-6">
-          <h1 className="text-white">
-            Global Shipping<br></br>The Way it Should Be
+    <div className="flex flex-col p-4 sm:p-6 md:p-8 lg:p-10">
+      {/* Hero Section */}
+      <div className="mb-10 flex flex-col items-center justify-between gap-8 md:mb-20 md:flex-row">
+        {/* Text Content */}
+        <div className="flex w-full flex-col gap-6 text-center md:w-1/2 md:text-left">
+          <h1 className="text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
+            Global Shipping
+            <br />
+            The Way it Should Be
           </h1>
-          <p className="text-white opacity-75">We provide a seamless experience for all your shipping needs.</p>
+          <p className="text-sm text-white opacity-75 sm:text-base">
+            We provide a seamless experience for all your shipping needs.
+          </p>
         </div>
-        <Image src={heroImage} />
+        {/* Hero Image */}
+        <div className="flex w-full justify-center md:w-1/2">
+          <div className="relative aspect-[4/3] w-full max-w-md">
+            <Image
+              src={heroImage}
+              alt="Hero Image"
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              priority
+              className="object-contain"
+            />
+          </div>
+        </div>
       </div>
+
+      {/* Tracking Search */}
       <TrackingSearch />
-      <div className="flex justify-between">
+
+      {/* Action Buttons */}
+      <div className="mt-8 flex flex-col justify-between gap-4 sm:flex-row">
         <Link
-          href="/ShipNow"
-          className="m-10 flex h-24 w-2/5 items-center justify-center rounded-2xl bg-violet-400 px-4 text-white hover:bg-violet-700 hover:no-underline">
+          href="/request-delivery"
+          className="flex w-full items-center justify-center rounded-2xl bg-violet-400 px-4 py-6 text-white transition-colors hover:bg-violet-700 hover:no-underline sm:w-1/2">
           <span className="flex items-center justify-center gap-2">
-            <Image src={shipNowIcon} alt="Ship Now Icon" width={24} height={24} />
-            SHIP NOW
+            <div className="relative h-6 w-6">
+              <Image src={shipNowIcon} alt="Ship Now Icon" fill sizes="24px" />
+            </div>
+            <span className="font-semibold">SHIP NOW</span>
           </span>
         </Link>
         <Link
           href="/Quotations"
-          className="m-10 flex w-2/5 items-center justify-center rounded-2xl border-2 border-teal-200 px-4 text-white hover:bg-teal-600 hover:no-underline">
+          className="flex w-full items-center justify-center rounded-2xl border-2 border-teal-200 px-4 py-6 text-white transition-colors hover:bg-teal-600 hover:no-underline sm:w-1/2">
           <span className="flex items-center justify-center gap-2">
-            <Image src={quoteIcon} alt="Get a Quote Icon" width={24} height={24} />
-            GET A QUOTE
+            <div className="relative h-6 w-6">
+              <Image src={quoteIcon} alt="Get a Quote Icon" fill sizes="24px" />
+            </div>
+            <span className="font-semibold">GET A QUOTE</span>
           </span>
         </Link>
       </div>
