@@ -1,14 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { CreditCard } from 'lucide-react';
 
 const PaymentPage = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const request = searchParams.get('confirmedRequestData');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('credit_card');
@@ -18,16 +16,20 @@ const PaymentPage = () => {
     cvv: ''
   });
   const [totalPayment, setTotalPayment] = useState(null);
+  const [requestId, setRequestId] = useState(null); // Define requestId state here
 
   useEffect(() => {
+    const storedRequestId = localStorage.getItem('tempRequestID');
     const storedAmount = localStorage.getItem('quotationPrice');
-    if (request && storedAmount) {
+
+    if (storedRequestId && storedAmount) {
       setTotalPayment(parseFloat(storedAmount));
+      setRequestId(storedRequestId); // Set requestId state here
     } else {
       console.error('No request ID or amount found');
       setError('No request ID or amount found');
     }
-  }, [request]);
+  }, []);
 
   const validateCardNumber = number => number.length === 16 && /^\d+$/.test(number);
   const validateExpiryDate = date => /^(0[1-9]|1[0-2])\/\d{2}$/.test(date);
@@ -46,7 +48,7 @@ const PaymentPage = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
-
+  
     if (!validateCardNumber(paymentDetails.cardNumber)) {
       setError('Credit card number must be 16 numerical digits.');
       return;
@@ -59,10 +61,10 @@ const PaymentPage = () => {
       setError('CVV must be 3 numerical digits.');
       return;
     }
-
+  
     try {
       const response = await axios.post('/api/payment', {
-        requestID: request,
+        requestID: requestId, 
         paymentInfo: {
           cardNumber: paymentDetails.cardNumber,
           expiryDate: paymentDetails.expiryDate,
@@ -71,7 +73,7 @@ const PaymentPage = () => {
         },
         amount: totalPayment
       });
-
+  
       if (response.status === 200 && response.data.success) {
         setSuccess('Payment authorized. Your payment has been successfully processed.');
         setPaymentDetails({ cardNumber: '', expiryDate: '', cvv: '' });
@@ -83,6 +85,7 @@ const PaymentPage = () => {
       setError('Payment authorization failed. Please try again.');
     }
   };
+  
 
   const paymentMethods = [
     { id: 'credit_card', name: 'Credit Card', icon: CreditCard },
