@@ -16,7 +16,7 @@ const PaymentPage = () => {
     cvv: ''
   });
   const [totalPayment, setTotalPayment] = useState(null);
-  const [requestId, setRequestId] = useState(null); // Define requestId state here
+  const [requestId, setRequestId] = useState(null);
 
   useEffect(() => {
     const storedRequestId = localStorage.getItem('tempRequestID');
@@ -24,7 +24,7 @@ const PaymentPage = () => {
 
     if (storedRequestId && storedAmount) {
       setTotalPayment(parseFloat(storedAmount));
-      setRequestId(storedRequestId); // Set requestId state here
+      setRequestId(storedRequestId);
     } else {
       console.error('No request ID or amount found');
       setError('No request ID or amount found');
@@ -40,8 +40,8 @@ const PaymentPage = () => {
     setPaymentDetails({ ...paymentDetails, [name]: value });
   };
 
-  const handlePaymentMethodChange = (e) => {
-    setPaymentMethod(e.target.value);
+  const handlePaymentMethodChange = (method) => {
+    setPaymentMethod(method); // Update the state correctly
   };
 
   const handleSubmit = async e => {
@@ -85,11 +85,10 @@ const PaymentPage = () => {
       setError('Payment authorization failed. Please try again.');
     }
   };
-  
 
   const paymentMethods = [
-    { id: 'credit_card', name: 'Credit Card', icon: CreditCard },
-    { id: 'debit_card', name: 'Debit Card', icon: CreditCard }
+    { id: 'credit_card', name: 'Credit Card', icon: CreditCard, value: "credit_card" },
+    { id: 'debit', name: 'Debit Card', icon: CreditCard, value: "debit" }
   ];
 
   return (
@@ -118,7 +117,6 @@ const PaymentPage = () => {
             </div>
           )}
 
-          {/* Payment Method Selection */}
           <div className="flex flex-col gap-2">
             <label className="text-sm text-gray-400">Card Type</label>
             <div className="grid grid-cols-2 gap-4">
@@ -126,17 +124,17 @@ const PaymentPage = () => {
                 <button
                   key={method.id}
                   type="button"
-                  onClick={() => setPaymentMethod(method.id)}
+                  onClick={() => handlePaymentMethodChange(method.value)}
                   className={`flex items-center justify-center gap-3 rounded-xl border-2 p-4 transition-all ${
-                    paymentMethod === method.id
+                    paymentMethod === method.value
                       ? 'border-violet-400 bg-violet-400/10'
                       : 'border-gray-800 hover:border-gray-700'
-                  } `}>
+                  }`}>
                   <method.icon
-                    className={`h-6 w-6 ${paymentMethod === method.id ? 'text-violet-400' : 'text-gray-400'}`}
+                    className={`h-6 w-6 ${paymentMethod === method.value ? 'text-violet-400' : 'text-gray-400'}`}
                   />
                   <span
-                    className={`text-sm font-medium ${paymentMethod === method.id ? 'text-violet-400' : 'text-gray-400'}`}>
+                    className={`text-sm font-medium ${paymentMethod === method.value ? 'text-violet-400' : 'text-gray-400'}`}>
                     {method.name}
                   </span>
                 </button>
@@ -144,7 +142,6 @@ const PaymentPage = () => {
             </div>
           </div>
 
-          {/* Card Details */}
           <div className="flex flex-col gap-2">
             <label className="text-sm text-gray-400">Card Number</label>
             <input
