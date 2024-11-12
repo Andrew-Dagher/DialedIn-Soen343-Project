@@ -2,8 +2,10 @@
 
 import React, { useState } from 'react';
 import QuotationForm from '../../components/QuotationForm';
+import { useRouter } from 'next/navigation';
 
 export default function Page() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     weight: '',
     length: '',
@@ -79,10 +81,9 @@ export default function Page() {
 
   const handleAccept = () => {
     setAccepted(true);
-    console.log('Quotation accepted, sending data for delivery:', formData);
+    const encodedData = encodeURIComponent(JSON.stringify(formData));
+    router.push(`/request-delivery?data=${encodedData}`);
   };
-
-  const encodedData = encodeURIComponent(JSON.stringify(formData));
 
   return (
     <div className="mx-80 mt-10 rounded-xl border-2 border-gray-800 bg-gray-950 p-6 text-gray-100">

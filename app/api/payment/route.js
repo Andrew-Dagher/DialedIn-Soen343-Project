@@ -12,7 +12,7 @@ export async function POST(request) {
   }
 
   try {
-     // 1. Update Client with payment information using requestID instead of _id
+    // 1. Update Client with payment information using requestID instead of _id
     // const client = await Client.findOneAndUpdate(
     //   { requestID: requestID }, // Change _id to requestID
     //   { $set: { paymentInfo } },
