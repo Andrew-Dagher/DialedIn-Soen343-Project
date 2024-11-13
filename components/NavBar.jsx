@@ -4,15 +4,14 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Menu, X } from 'lucide-react';
-import loginIcon from '../public/login-icon.svg';
+import { Menu, X, User } from 'lucide-react';
 
 const tabs = [
   { name: 'Home', link: '/', icon: null },
   { name: 'Tracking', link: '/tracking' },
   { name: 'Get a Quote', link: '/Quotations' },
   { name: 'Ship Now', link: '/request-delivery' },
-  { name: 'Login', link: '/login', icon: loginIcon }
+  { name: 'Login', link: '/login', icon: <User className="h-4 w-4 text-violet-400" /> }
 ];
 
 const NavBar = () => {
@@ -41,8 +40,8 @@ const NavBar = () => {
                   className={`group relative text-sm font-medium ${isActive ? 'text-violet-400' : 'text-gray-400'} `}>
                   <span className="relative z-10 flex items-center gap-2 transition-colors duration-200 group-hover:text-white">
                     {tab.icon && (
-                      <div className="relative h-4 w-4">
-                        <Image src={tab.icon} alt={`${tab.name} icon`} fill sizes="16px" className="object-contain" />
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-500/10">
+                        <User className="h-4 w-4 text-violet-400" />
                       </div>
                     )}
                     {tab.name}
