@@ -28,11 +28,15 @@ const Highlight = ({ children, testId }) => {
   if (!isLoaded) return null;
 
   return (
-    <pre className="rounded" data-testid={testId}>
-      <code ref={codeNode} className={language}>
-        {children}
-      </code>
-    </pre>
+    <div className="rounded-xl overflow-hidden bg-gray-900/50 border-2 border-gray-800">
+      <div className="overflow-x-auto p-4">
+        <pre className="rounded" data-testid={testId}>
+          <code ref={codeNode} className={language}>
+            {children}
+          </code>
+        </pre>
+      </div>
+    </div>
   );
 };
 

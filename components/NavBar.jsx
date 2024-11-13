@@ -1,158 +1,102 @@
-'use  client';
+'use client';
 
-import React, { useState } from 'react';
-import {
-  Collapse,
-  Container,
-  Navbar,
-  NavbarToggler,
-  NavbarBrand,
-  Nav,
-  NavItem,
-  UncontrolledDropdown,
-  DropdownToggle,
-  DropdownMenu,
-  DropdownItem
-} from 'reactstrap';
-import { useUser } from '@auth0/nextjs-auth0/client';
+import { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
+import { Menu, X } from 'lucide-react';
+import loginIcon from '../public/login-icon.svg';
 
-import PageLink from './PageLink';
-import AnchorLink from './AnchorLink';
+const tabs = [
+  { name: 'Home', link: '/', icon: null },
+  { name: 'Tracking', link: '/tracking' },
+  { name: 'Get a Quote', link: '/Quotations' },
+  { name: 'Ship Now', link: '/request-delivery' },
+  { name: 'Login', link: '/login', icon: loginIcon }
+];
 
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, isLoading } = useUser();
-  const toggle = () => setIsOpen(!isOpen);
+  const pathname = usePathname();
 
   return (
-    <div className="nav-container" data-testid="navbar">
-      <Navbar color="light" light expand="md">
-        <Container>
-          <NavbarBrand className="logo" />
-          <NavbarToggler onClick={toggle} data-testid="navbar-toggle" />
-          <Collapse isOpen={isOpen} navbar>
-            <Nav className="mr-auto" navbar data-testid="navbar-items">
-              <NavItem>
-                <PageLink href="/" className="nav-link" testId="navbar-home">
-                  Home
-                </PageLink>
-              </NavItem>
-              {user && (
-                <>
-                  <NavItem>
-                    <PageLink href="/csr" className="nav-link" testId="navbar-csr">
-                      Client-side rendered page
-                    </PageLink>
-                  </NavItem>
-                  <NavItem>
-                    <PageLink href="/ssr" className="nav-link" testId="navbar-ssr">
-                      Server-side rendered page
-                    </PageLink>
-                  </NavItem>
-                  <NavItem>
-                    <PageLink href="/external" className="nav-link" testId="navbar-external">
-                      External API
-                    </PageLink>
-                  </NavItem>
-                </>
-              )}
-            </Nav>
-            <Nav className="d-none d-md-block" navbar>
-              {!isLoading && !user && (
-                <NavItem id="qsLoginBtn">
-                  <AnchorLink
-                    href="/api/auth/login"
-                    className="btn btn-primary btn-margin"
-                    tabIndex={0}
-                    testId="navbar-login-desktop">
-                    Log in
-                  </AnchorLink>
-                </NavItem>
-              )}
-              {user && (
-                <UncontrolledDropdown nav inNavbar data-testid="navbar-menu-desktop">
-                  <DropdownToggle nav caret id="profileDropDown">
-                    <img
-                      src={user.picture}
-                      alt="Profile"
-                      className="nav-user-profile rounded-circle"
-                      width="50"
-                      height="50"
-                      decode="async"
-                      data-testid="navbar-picture-desktop"
-                    />
-                  </DropdownToggle>
-                  <DropdownMenu>
-                    <DropdownItem header data-testid="navbar-user-desktop">
-                      {user.name}
-                    </DropdownItem>
-                    <DropdownItem className="dropdown-profile" tag="span">
-                      <PageLink href="/profile" icon="user" testId="navbar-profile-desktop">
-                        Profile
-                      </PageLink>
-                    </DropdownItem>
-                    <DropdownItem id="qsLogoutBtn">
-                      <AnchorLink href="/api/auth/logout" icon="power-off" testId="navbar-logout-desktop">
-                        Log out
-                      </AnchorLink>
-                    </DropdownItem>
-                  </DropdownMenu>
-                </UncontrolledDropdown>
-              )}
-            </Nav>
-            {!isLoading && !user && (
-              <Nav className="d-md-none" navbar>
-                <AnchorLink
-                  href="/api/auth/login"
-                  className="btn btn-primary btn-block"
-                  tabIndex={0}
-                  testId="navbar-login-mobile">
-                  Log in
-                </AnchorLink>
-              </Nav>
-            )}
-            {user && (
-              <Nav
-                id="nav-mobile"
-                className="d-md-none justify-content-between"
-                navbar
-                data-testid="navbar-menu-mobile">
-                <NavItem>
-                  <span className="user-info">
-                    <img
-                      src={user.picture}
-                      alt="Profile"
-                      className="nav-user-profile d-inline-block rounded-circle mr-3"
-                      width="50"
-                      height="50"
-                      decode="async"
-                      data-testid="navbar-picture-mobile"
-                    />
-                    <h6 className="d-inline-block" data-testid="navbar-user-mobile">
-                      {user.name}
-                    </h6>
+    <header className="fixed left-0 right-0 top-0 z-50">
+      <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" />
+
+      <nav className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-20 items-center justify-between">
+          {/* Logo */}
+          <Link href="/" className="group relative">
+            <span className="text-xl font-bold text-white transition-colors group-hover:text-violet-400">DAILEDIN</span>
+          </Link>
+
+          {/* Desktop Menu */}
+          <div className="hidden items-center gap-8 md:flex">
+            {tabs.map(tab => {
+              const isActive = pathname === tab.link;
+              return (
+                <Link
+                  href={tab.link}
+                  key={tab.name}
+                  className={`group relative text-sm font-medium ${isActive ? 'text-violet-400' : 'text-gray-400'} `}>
+                  <span className="relative z-10 flex items-center gap-2 transition-colors duration-200 group-hover:text-white">
+                    {tab.icon && (
+                      <div className="relative h-4 w-4">
+                        <Image src={tab.icon} alt={`${tab.name} icon`} fill sizes="16px" className="object-contain" />
+                      </div>
+                    )}
+                    {tab.name}
                   </span>
-                </NavItem>
-                <NavItem>
-                  <PageLink href="/profile" icon="user" testId="navbar-profile-mobile">
-                    Profile
-                  </PageLink>
-                </NavItem>
-                <NavItem id="qsLogoutBtn">
-                  <AnchorLink
-                    href="/api/auth/logout"
-                    className="btn btn-link p-0"
-                    icon="power-off"
-                    testId="navbar-logout-mobile">
-                    Log out
-                  </AnchorLink>
-                </NavItem>
-              </Nav>
-            )}
-          </Collapse>
-        </Container>
-      </Navbar>
-    </div>
+                  {/* Active/Hover Indicator */}
+                  <div
+                    className={`absolute -bottom-1.5 left-0 h-0.5 transition-all duration-200 ease-out ${
+                      isActive ? 'w-full bg-violet-400' : 'w-0 bg-gray-400 group-hover:w-full'
+                    } `}
+                  />
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="relative p-2 text-gray-400 transition-colors hover:text-white md:hidden"
+            aria-label={isOpen ? 'Close menu' : 'Open menu'}>
+            {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        {isOpen && (
+          <div className="absolute left-0 right-0 top-full border-t border-gray-800/50 bg-slate-900/95 backdrop-blur-md md:hidden">
+            <div className="space-y-1 px-2 py-4">
+              {tabs.map(tab => {
+                const isActive = pathname === tab.link;
+                return (
+                  <Link
+                    href={tab.link}
+                    key={tab.name}
+                    onClick={() => setIsOpen(false)}
+                    className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                      isActive
+                        ? 'bg-violet-400/10 text-violet-400'
+                        : 'text-gray-400 hover:translate-x-2 hover:bg-gray-800/50 hover:text-white'
+                    } `}>
+                    {tab.icon && (
+                      <div className="relative h-4 w-4">
+                        <Image src={tab.icon} alt={`${tab.name} icon`} fill sizes="16px" className="object-contain" />
+                      </div>
+                    )}
+                    {tab.name}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </nav>
+    </header>
   );
 };
 
