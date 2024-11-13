@@ -1,3 +1,5 @@
+// PaymentPage.jsx
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -17,17 +19,20 @@ const PaymentPage = () => {
   });
   const [totalPayment, setTotalPayment] = useState(null);
   const [requestId, setRequestId] = useState(null);
+  const [deliveryDetails, setDeliveryDetails] = useState(null);
 
   useEffect(() => {
     const storedRequestId = localStorage.getItem('tempRequestID');
     const storedAmount = localStorage.getItem('quotationPrice');
+    const storedDeliveryDetails = JSON.parse(localStorage.getItem('requestData')); // Retrieve delivery details
 
-    if (storedRequestId && storedAmount) {
+    if (storedRequestId && storedAmount && storedDeliveryDetails) {
       setTotalPayment(parseFloat(storedAmount));
       setRequestId(storedRequestId);
+      setDeliveryDetails(storedDeliveryDetails);
     } else {
-      console.error('No request ID or amount found');
-      setError('No request ID or amount found');
+      console.error('No request ID, amount, or delivery details found');
+      setError('No request ID, amount, or delivery details found');
     }
   }, []);
 
@@ -41,14 +46,14 @@ const PaymentPage = () => {
   };
 
   const handlePaymentMethodChange = (method) => {
-    setPaymentMethod(method); // Update the state correctly
+    setPaymentMethod(method);
   };
 
   const handleSubmit = async e => {
     e.preventDefault();
     setError('');
     setSuccess('');
-  
+
     if (!validateCardNumber(paymentDetails.cardNumber)) {
       setError('Credit card number must be 16 numerical digits.');
       return;
@@ -61,7 +66,7 @@ const PaymentPage = () => {
       setError('CVV must be 3 numerical digits.');
       return;
     }
-  
+
     try {
       const response = await axios.post('/api/payment', {
         requestID: requestId, 
@@ -71,9 +76,10 @@ const PaymentPage = () => {
           cvv: paymentDetails.cvv,
           paymentMethod: paymentMethod
         },
+        deliveryDetails, // Send all delivery details
         amount: totalPayment
       });
-  
+
       if (response.status === 200 && response.data.success) {
         setSuccess('Payment authorized. Your payment has been successfully processed.');
         setPaymentDetails({ cardNumber: '', expiryDate: '', cvv: '' });
