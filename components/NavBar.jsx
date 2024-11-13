@@ -37,7 +37,7 @@ const NavBar = () => {
                 <Link
                   href={tab.link}
                   key={tab.name}
-                  className={`group relative text-sm font-medium ${isActive ? 'text-violet-400' : 'text-gray-400'} `}>
+                  className={`group relative hover:no-underline text-sm font-medium ${isActive ? 'text-violet-400' : 'text-gray-400'} `}>
                   <span className="relative z-10 flex items-center gap-2 transition-colors duration-200 group-hover:text-white">
                     {tab.icon && (
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-500/10">
