@@ -20,7 +20,7 @@ const tabsLoggedIn = [
   { name: 'Tracking', link: '/tracking' },
   { name: 'Get a Quote', link: '/Quotations' },
   { name: 'Ship Now', link: '/request-delivery' },
-  { name: 'Log Out', link: '/api/auth/logout', icon: <User className="h-4 w-4 text-violet-400" /> }
+  { name: 'Log Out', a: '/api/auth/logout', icon: <User className="h-4 w-4 text-violet-400" /> }
 ];
 
 const NavBar = () => {
@@ -44,10 +44,10 @@ const NavBar = () => {
           {!isLoading&& user &&
           (<div className="hidden items-center gap-8 md:flex">
             {tabsLoggedIn.map(tab => {
-              const isActive = pathname === tab.link;
+              const isActive = pathname === tab.a;
               return (
-                <Link
-                  href={tab.link}
+                <a
+                  href={tab.a}
                   key={tab.name}
                   className={`group relative hover:no-underline text-sm font-medium ${isActive ? 'text-violet-400' : 'text-gray-400'} `}>
                   <span className="relative z-10 flex items-center gap-2 transition-colors duration-200 group-hover:text-white">
@@ -64,7 +64,7 @@ const NavBar = () => {
                       isActive ? 'w-full bg-violet-400' : 'w-0 bg-gray-400 group-hover:w-full'
                     } `}
                   />
-                </Link>
+                </a>
               );
             })}
           </div>)}
