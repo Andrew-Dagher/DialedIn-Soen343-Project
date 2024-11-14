@@ -3,12 +3,10 @@ class TrackingSubject {
       this.observers = [];
     }
   
-    // Method to add an observer
     subscribe(observer) {
       this.observers.push(observer);
     }
   
-    // Method to remove an observer
     unsubscribe(observer) {
       this.observers = this.observers.filter(obs => obs !== observer);
     }

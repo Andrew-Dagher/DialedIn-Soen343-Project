@@ -1,5 +1,5 @@
 import { withPageAuthRequired } from '@auth0/nextjs-auth0';
-import TrackingForm from '../../components/TrackingForm'; // Import the form component
+import TrackingForm from '../../components/TrackingForm.jsx'; // Import the form component
 
 function TrackingPage() {
     return (
