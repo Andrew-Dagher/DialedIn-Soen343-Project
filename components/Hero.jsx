@@ -8,58 +8,97 @@ import Link from 'next/link';
 
 const Hero = () => {
   return (
-    <div className="flex flex-col p-4 sm:p-6 md:p-8 lg:p-10">
+    <div className="container mx-auto flex flex-col px-4 sm:px-6 lg:px-8">
       {/* Hero Section */}
-      <div className="mb-10 flex flex-col items-center justify-between gap-8 md:mb-20 md:flex-row">
-        {/* Text Content */}
-        <div className="flex w-full flex-col gap-6 text-center md:w-1/2 md:text-left">
-          <h1 className="text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
-            Global Shipping
-            <br />
-            The Way it Should Be
-          </h1>
-          <p className="text-sm text-white opacity-75 sm:text-base">
-            We provide a seamless experience for all your shipping needs.
-          </p>
-        </div>
-        {/* Hero Image */}
-        <div className="flex w-full justify-center md:w-1/2">
-          <div className="relative aspect-[4/3] w-full max-w-md">
-            <Image
-              src={heroImage}
-              alt="Hero Image"
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              priority
-              className="object-contain"
-            />
+      <div className="relative py-8 sm:py-12 md:py-16 lg:py-20">
+        <div className="flex flex-col-reverse gap-8 lg:flex-row lg:items-center lg:justify-between lg:gap-12">
+          {/* Text Content */}
+          <div className="flex flex-col space-y-6 text-center lg:w-1/2 lg:text-left">
+            <h1 className="text-4xl font-bold text-white sm:text-5xl md:text-6xl lg:text-5xl">
+              Global Shipping
+              <br className="hidden sm:block" />
+              <span className="mt-2 block sm:mt-3">The Way it Should Be</span>
+            </h1>
+            <p className="mx-auto max-w-lg text-base text-white/75 sm:text-lg lg:mx-0 lg:max-w-xl">
+              We provide a seamless experience for all your shipping needs.
+            </p>
+          </div>
+
+          {/* Hero Image */}
+          <div className="lg:w-1/2">
+            <div className="relative mx-auto aspect-[4/3] w-full max-w-lg">
+              <Image
+                src={heroImage}
+                alt="Hero Image"
+                fill
+                sizes="(max-width: 640px) 90vw, 
+                       (max-width: 1024px) 70vw, 
+                       45vw"
+                priority
+                className="object-contain"
+              />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Tracking Search */}
-      <TrackingSearch />
+      <div className="my-8 sm:my-12 lg:mt-0">
+        <TrackingSearch />
+      </div>
 
       {/* Action Buttons */}
-      <div className="mt-8 flex flex-col justify-between gap-4 sm:flex-row">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
         <Link
           href="/request-delivery"
-          className="flex w-full items-center justify-center rounded-2xl bg-violet-400 px-4 py-6 text-white transition-colors hover:bg-violet-700 hover:no-underline sm:w-1/2">
-          <span className="flex items-center justify-center gap-2">
-            <div className="relative h-6 w-6">
-              <Image src={shipNowIcon} alt="Ship Now Icon" fill sizes="24px" />
+          className="group flex items-center justify-center rounded-2xl 
+                   bg-violet-400 px-6 py-4 sm:py-5
+                   text-white transition-all duration-200 
+                   hover:bg-violet-500 hover:no-underline 
+                   hover:shadow-lg hover:shadow-violet-400/20
+                   active:transform active:scale-95"
+        >
+          <span className="flex items-center justify-center gap-3">
+            <div className="relative h-6 w-6 transition-transform duration-200 
+                          group-hover:scale-110">
+              <Image 
+                src={shipNowIcon} 
+                alt="Ship Now Icon" 
+                fill 
+                sizes="24px"
+                className="object-contain" 
+              />
             </div>
-            <span className="font-semibold">SHIP NOW</span>
+            <span className="text-base font-semibold tracking-wide sm:text-lg">
+              SHIP NOW
+            </span>
           </span>
         </Link>
+
         <Link
           href="/Quotations"
-          className="flex w-full items-center justify-center rounded-2xl border-2 border-teal-200 px-4 py-6 text-white transition-colors hover:bg-teal-600 hover:no-underline sm:w-1/2">
-          <span className="flex items-center justify-center gap-2">
-            <div className="relative h-6 w-6">
-              <Image src={quoteIcon} alt="Get a Quote Icon" fill sizes="24px" />
+          className="group flex items-center justify-center rounded-2xl 
+                   border-2 border-teal-200 px-6 py-4 sm:py-5
+                   text-white transition-all duration-200 
+                   hover:bg-teal-500 hover:no-underline 
+                   hover:border-teal-500 hover:shadow-lg 
+                   hover:shadow-teal-400/20
+                   active:transform active:scale-95"
+        >
+          <span className="flex items-center justify-center gap-3">
+            <div className="relative h-6 w-6 transition-transform duration-200 
+                          group-hover:scale-110">
+              <Image 
+                src={quoteIcon} 
+                alt="Get a Quote Icon" 
+                fill 
+                sizes="24px"
+                className="object-contain" 
+              />
             </div>
-            <span className="font-semibold">GET A QUOTE</span>
+            <span className="text-base font-semibold tracking-wide sm:text-lg">
+              GET A QUOTE
+            </span>
           </span>
         </Link>
       </div>
