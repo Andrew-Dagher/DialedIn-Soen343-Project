@@ -1,10 +1,13 @@
 import { EmailSubscriber } from '../utils/EmailSubscriber'; 
+import { TrackingSubject } from '../utils/TrackingSubject'; 
 import sendgridClient from '@sendgrid/mail';
 import Tracking from '../models/Tracking'; 
 
 sendgridClient.setApiKey(process.env.SENDGRID_API_KEY); 
 
 const emailSubscriber = new EmailSubscriber(); 
+const trackingSubject = new TrackingSubject();
+trackingSubject.subscribe(emailSubscriber);
 const deliveryStages = [
   {
     location: 'Picked up from warehouse',
@@ -74,7 +77,6 @@ async function updateTrackingPhase(packageId) {
     }
 
     const currentProgress = trackingData.locationDetails?.progress || 0;
-
     const currentIndex = deliveryStages.findIndex(stage => stage.progress === currentProgress);
     if (currentIndex === -1) {
       console.error('Invalid progress state:', currentProgress);
@@ -82,7 +84,6 @@ async function updateTrackingPhase(packageId) {
     }
 
     if (currentIndex >= deliveryStages.length - 1) {
-      // Package is already delivered
       trackingData.locationDetails = deliveryStages[deliveryStages.length - 1];
       console.log(`Package ${packageId} already delivered.`);
     } else {
@@ -95,12 +96,9 @@ async function updateTrackingPhase(packageId) {
     await trackingData.save();
 
     if (trackingData.deliveryProgress !== trackingData.lastNotifiedProgress) {
-      console.log(`Sending notification for packageId: ${packageId}, Progress: ${trackingData.deliveryProgress}%`);
-      await emailSubscriber.update(trackingData);
+      trackingSubject.notify(trackingData); 
       trackingData.lastNotifiedProgress = trackingData.deliveryProgress;
       await trackingData.save(); 
-    } else {
-      console.log(`No notification needed for packageId: ${packageId}, Progress remains at: ${trackingData.deliveryProgress}%`);
     }
 
     return trackingData;
