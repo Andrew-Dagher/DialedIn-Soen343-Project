@@ -1,12 +1,11 @@
-import connectToDatabase from '../../../utils/mongodb'; 
-import { handleUserTrackingRequest } from '../../../services/TrackingService'; 
-
+import connectToDatabase from '../../../utils/mongodb';
+import { handleUserTrackingRequest } from '../../../services/TrackingService';
 
 export async function POST(req) {
   try {
     await connectToDatabase();
 
-  
+    // Extract the packageId from query parameters
     const { searchParams } = new URL(req.url);
     const packageId = searchParams.get('packageId');
 
@@ -14,13 +13,11 @@ export async function POST(req) {
       return new Response(JSON.stringify({ error: 'PackageId is required' }), { status: 400 });
     }
 
-
     const trackingData = await handleUserTrackingRequest(packageId);
 
     if (trackingData.error) {
       return new Response(JSON.stringify({ error: trackingData.error }), { status: 500 });
     }
-
 
     const responseData = {
       message: `Tracking updated for packageId: ${packageId}`,
@@ -31,8 +28,8 @@ export async function POST(req) {
         clientName: trackingData.clientName,
         clientPhone: trackingData.clientPhone,
         locationDetails: trackingData.locationDetails,
-        deliveryProgress: trackingData.deliveryProgress
-      }
+        deliveryProgress: trackingData.deliveryProgress,
+      },
     };
 
     return new Response(JSON.stringify(responseData), { status: 200 });
