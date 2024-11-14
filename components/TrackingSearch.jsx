@@ -5,8 +5,8 @@ import searchIcon from '../public/search-icon.svg';
 
 const TrackingSearch = () => {
   return (
-    <div className="flex w-full flex-col gap-2 sm:flex-row sm:gap-0">
-      <div className="relative flex h-12 flex-1 items-center rounded-xl bg-white sm:h-14">
+    <div className="flex w-full flex-col gap-2 sm:flex-row sm:gap-0 h-12">
+      <div className="relative flex h-12 flex-1 items-center rounded-xl bg-white sm:h-14 ">
         <div className="relative ml-4 h-6 w-6">
           <Image src={searchIcon} alt="Search Icon" fill sizes="24px" className="object-contain" />
         </div>
@@ -18,7 +18,7 @@ const TrackingSearch = () => {
         />
         <Button
           name="Track"
-          className=" rounded-xl bg-violet-400 text-sm font-medium text-white transition-colors hover:bg-violet-600 sm:h-14 sm:px-12 sm:text-base"
+          className=" rounded-xl bg-violet-400 text-sm font-medium text-white transition-colors hover:bg-violet-600 sm:h-14 sm:text-base"
         />
       </div>
     </div>
