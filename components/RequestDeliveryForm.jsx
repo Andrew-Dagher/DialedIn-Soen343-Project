@@ -5,32 +5,33 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import DeliveryRequestService from '../services/DeliveryRequestService';
 
 const RequestDeliveryForm = () => {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const [currentStep, setCurrentStep] = useState(1);
-    const [formData, setFormData] = useState({
-        contactName: '',
-        phoneNumber: '',
-        email: '',
-        country: '',
-        addressLine: '',
-        postalCode: '',
-        city: '',
-        width: '',
-        length: '',
-        height: '',
-        weight: '',
-        pickupCountry: '',
-        pickupAddress: '',
-        pickupZipcode: '',
-        pickupCity: '',
-        dropoffCountry: '',
-        dropoffAddress: '',
-        dropoffZipcode: '',
-        dropoffCity: '',
-        shippingMethod: '',
-    });
-    const [completedSteps, setCompletedSteps] = useState({});
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState({
+      contactName: '',
+      phoneNumber: '',
+      email: '',
+      country: '',
+      addressLine: '',
+      postalCode: '',
+      city: '',
+      width: '',
+      length: '',
+      height: '',
+      weight: '',
+      pickupCountry: '',
+      pickupAddress: '',
+      pickupZipcode: '',
+      pickupCity: '',
+      dropoffCountry: '',
+      dropoffAddress: '',
+      dropoffZipcode: '',
+      dropoffCity: '',
+      shippingMethod: '',
+  });
+  const [completedSteps, setCompletedSteps] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         const data = searchParams.get('data');
