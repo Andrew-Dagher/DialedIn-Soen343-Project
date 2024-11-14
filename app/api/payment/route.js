@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import connectToDatabase from '../../../utils/mongodb';
 import PaymentService from '../../../services/PaymentService';
 import OrderDelivery from '../../../models/OrderDelivery';
+import Tracking from '../../../models/Tracking';
 
 export async function POST(request) {
   await connectToDatabase(); // Ensure the database is connected
@@ -64,8 +65,25 @@ export async function POST(request) {
         paymentStatus: 'completed',
       });
 
+      const tracking = new Tracking({
+        packageId: requestID,
+        clientContact: deliveryDetails.email,
+        clientName: deliveryDetails.contactName,
+        clientPhone: deliveryDetails.phoneNumber,
+        locationDetails: {
+          location: 'Picked up from warehouse',
+          description: 'Package has been picked up and is being prepared for delivery',
+          progress: 0,
+        },
+        deliveryProgress: 0,
+      });
+
+      await tracking.save();
+
       await delivery.save();
     }
+
+
 
     return NextResponse.json({ success: true, payment });
   } catch (error) {
