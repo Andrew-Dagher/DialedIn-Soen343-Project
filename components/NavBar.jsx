@@ -2,9 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Menu, X, User } from 'lucide-react';
+import { Menu, X, User, Home, Package, DollarSign, Send, Box, LogOut } from 'lucide-react';
 import { useUser } from '@auth0/nextjs-auth0/client';
 
 const tabs = [
@@ -14,6 +13,32 @@ const tabs = [
   { name: 'Ship Now', link: '/request-delivery' },
   {name: 'Add a Review', link: 'Reviews'},
   { name: 'Login', link: '/api/auth/login', icon: <User className="h-4 w-4 text-violet-400" /> }
+  {
+    name: 'Home',
+    link: '/',
+    mobileIcon: <Home className="h-4 w-4 text-violet-400" />
+  },
+  {
+    name: 'Tracking',
+    link: '/tracking',
+    mobileIcon: <Package className="h-4 w-4 text-violet-400" />
+  },
+  {
+    name: 'Get a Quote',
+    link: '/Quotations',
+    mobileIcon: <DollarSign className="h-4 w-4 text-violet-400" />
+  },
+  {
+    name: 'Ship Now',
+    link: '/request-delivery',
+    mobileIcon: <Send className="h-4 w-4 text-violet-400" />
+  },
+  {
+    name: 'Login',
+    link: '/api/auth/login',
+    icon: <User className="h-4 w-4 text-violet-400" />,
+    mobileIcon: <User className="h-4 w-4 text-violet-400" />
+  }
 ];
 
 const tabsLoggedIn = [
@@ -21,8 +46,7 @@ const tabsLoggedIn = [
   { name: 'Tracking', link: '/tracking' },
   { name: 'Get a Quote', link: '/Quotations' },
   { name: 'Ship Now', link: '/request-delivery' },
-  { name: 'View your Deliveries', link: '/deliveries'},
-  {name: 'Add a Review', link: 'Reviews'},
+  { name: 'View your Deliveries', link: '/deliveries' },
   { name: 'Log Out', link: '/api/auth/logout', icon: <User className="h-4 w-4 text-violet-400" /> }
 ];
 
@@ -31,6 +55,7 @@ const NavBar = () => {
   const pathname = usePathname();
   const { user, isLoading } = useUser();
 
+  const currentTabs = !isLoading && user ? tabsLoggedIn : tabs;
 
   return (
     <header className="fixed left-0 right-0 top-0 z-50">
@@ -44,86 +69,37 @@ const NavBar = () => {
           </Link>
 
           {/* Desktop Menu */}
-          {!isLoading&& user &&
-          (<div className="hidden items-center gap-8 md:flex">
-            {tabsLoggedIn.map(tab => {
+          <div className="hidden items-center gap-8 md:flex">
+            {currentTabs.map(tab => {
               const isActive = pathname === tab.link;
-              if (tab.name!='Log Out'){
+              const Component = tab.name === 'Log Out' ? 'a' : Link;
 
               return (
-                <Link
+                <Component
                   href={tab.link}
                   key={tab.name}
-                  className={`group relative hover:no-underline text-sm font-medium ${isActive ? 'text-violet-400' : 'text-gray-400'} `}>
+                  className={`group relative text-sm font-medium hover:no-underline ${isActive ? 'text-violet-400' : 'text-gray-400'}`}>
                   <span className="relative z-10 flex items-center gap-2 transition-colors duration-200 group-hover:text-white">
                     {tab.icon && (
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-500/10">
-                        <User className="h-4 w-4 text-violet-400" />
+                        {tab.icon}
                       </div>
                     )}
                     {tab.name}
                   </span>
                   {/* Active/Hover Indicator */}
-                  <div
-                    className={`absolute -bottom-1.5 left-0 h-0.5 transition-all duration-200 ease-out ${
-                      isActive ? 'w-full bg-violet-400' : 'w-0 bg-gray-400 group-hover:w-full'
-                    } `}
-                  />
-                </Link>
-              );}
-              else{
-                return(
-                <a
-                  href={tab.link}
-                  key={tab.name}
-                  className={`group relative hover:no-underline text-sm font-medium ${isActive ? 'text-violet-400' : 'text-gray-400'} `}>
-                  <span className="relative z-10 flex items-center gap-2 transition-colors duration-200 group-hover:text-white">
-                    {tab.icon && (
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-500/10">
-                        <User className="h-4 w-4 text-violet-400" />
-                      </div>
-                    )}
-                    {tab.name}
-                  </span>
-                  {/* Active/Hover Indicator */}
-                  <div
-                    className={`absolute -bottom-1.5 left-0 h-0.5 transition-all duration-200 ease-out ${
-                      isActive ? 'w-full bg-violet-400' : 'w-0 bg-gray-400 group-hover:w-full'
-                    } `}
-                  />
-                </a>
-            )}
-
-            })}
-          </div>)}
-          { !isLoading && !user &&(<div className="hidden items-center gap-8 md:flex">
-            {tabs.map(tab => {
-              const isActive = pathname === tab.link;
-              return (
-                <Link
-                  href={tab.link}
-                  key={tab.name}
-                  className={`group relative hover:no-underline text-sm font-medium ${isActive ? 'text-violet-400' : 'text-gray-400'} `}>
-                  <span className="relative z-10 flex items-center gap-2 transition-colors duration-200 group-hover:text-white">
-                    {tab.icon && (
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-500/10">
-                        <User className="h-4 w-4 text-violet-400" />
-                      </div>
-                    )}
-                    {tab.name}
-                  </span>
-                  {/* Active/Hover Indicator */}
-                  <div
-                    className={`absolute -bottom-1.5 left-0 h-0.5 transition-all duration-200 ease-out ${
-                      isActive ? 'w-full bg-violet-400' : 'w-0 bg-gray-400 group-hover:w-full'
-                    } `}
-                  />
-                </Link>
+                  {tab.name !== 'Log Out' && (
+                    <div
+                      className={`absolute -bottom-1.5 left-0 h-0.5 transition-all duration-200 ease-out ${
+                        isActive ? 'w-full bg-violet-400' : 'w-0 bg-gray-400 group-hover:w-full'
+                      }`}
+                    />
+                  )}
+                </Component>
               );
             })}
           </div>
-)}
-          
+
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsOpen(!isOpen)}
@@ -133,29 +109,30 @@ const NavBar = () => {
           </button>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Full Screen Mobile Menu */}
         {isOpen && (
-          <div className="absolute left-0 right-0 top-full border-t border-gray-800/50 bg-slate-900/95 backdrop-blur-md md:hidden">
-            <div className="space-y-1 px-2 py-4">
-              {tabs.map(tab => {
+          <div className="fixed inset-0 top-20 z-50 bg-slate-950 md:hidden">
+            <div className="flex flex-col space-y-2 p-4">
+              {currentTabs.map(tab => {
                 const isActive = pathname === tab.link;
+                const Component = tab.name === 'Log Out' ? 'a' : Link;
+
                 return (
-                  <Link
+                  <Component
                     href={tab.link}
                     key={tab.name}
                     onClick={() => setIsOpen(false)}
-                    className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                    className={`group relative flex items-center gap-3 rounded-xl p-4 text-base font-medium transition-all duration-200 ${
                       isActive
-                        ? 'bg-violet-400/10 text-violet-400'
-                        : 'text-gray-400 hover:translate-x-2 hover:bg-gray-800/50 hover:text-white'
+                        ? 'bg-violet-400/10 text-violet-400 hover:text-white'
+                        : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
                     } `}>
-                    {tab.icon && (
-                      <div className="relative h-4 w-4">
-                        <Image src={tab.icon} alt={`${tab.name} icon`} fill sizes="16px" className="object-contain" />
-                      </div>
-                    )}
-                    {tab.name}
-                  </Link>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-500/10">
+                      {tab.mobileIcon}
+                    </div>
+                    <span>{tab.name}</span>
+                    {isActive && <div className="absolute inset-y-0 left-0 w-1 rounded-r-full bg-violet-400" />}
+                  </Component>
                 );
               })}
             </div>

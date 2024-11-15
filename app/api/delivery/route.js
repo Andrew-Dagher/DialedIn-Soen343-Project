@@ -1,4 +1,6 @@
-import { nanoid } from 'nanoid';
+import { nanoid as defaultNanoid, customAlphabet } from 'nanoid';
+
+const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_', 21);
 
 let temporaryRequests = {}; // Temporary storage of form answers
 

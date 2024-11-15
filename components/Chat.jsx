@@ -12,7 +12,7 @@ const Chat = () => {
   const chatWindowRef = useRef(null);
 
   const formatMessage = message => {
-    const urlRegex = /(http:\/\/localhost:\d+\/tracking\/\d+)/g;
+    const urlRegex = /(http:\/\/localhost:\d+\/tracking\?packageId=[\w-]+)/g;
     return message.split(urlRegex).map((part, index) =>
       urlRegex.test(part) ? (
         <a
