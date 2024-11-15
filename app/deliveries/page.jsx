@@ -2,7 +2,24 @@
 
 import { useUser } from '@auth0/nextjs-auth0/client';
 import { useState, useEffect } from 'react';
-import { Package, Phone, Mail, MapPin, Truck, Calendar, User, Box, Loader2, Scale, Ruler } from 'lucide-react';
+import {
+  Package,
+  Phone,
+  Mail,
+  MapPin,
+  Truck,
+  Calendar,
+  User,
+  Box,
+  Loader2,
+  Scale,
+  Ruler,
+  CreditCard,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  AlertCircle
+} from 'lucide-react';
 
 export default function RequestDeliveryPage() {
   const { user, isLoading } = useUser();
@@ -21,16 +38,56 @@ export default function RequestDeliveryPage() {
     }
   }, [user]);
 
-  const getStatusStyle = status => {
-    const statusStyles = {
-      pending: 'border-yellow-400 bg-yellow-400/10 text-yellow-400',
-      paid: 'border-green-400 bg-green-400/10 text-green-400',
-      unpaid: 'border-red-400 bg-red-400/10 text-red-400',
-      delivered: 'border-green-400 bg-green-400/10 text-green-400',
-      'in transit': 'border-blue-400 bg-blue-400/10 text-blue-400',
-      processing: 'border-violet-400 bg-violet-400/10 text-violet-400'
+  const getPaymentStatusInfo = status => {
+    const statusInfo = {
+      pending: {
+        icon: <Clock className="h-4 w-4" />,
+        style: 'border-yellow-400 bg-yellow-400/10 text-yellow-400',
+        statusIcon: <CreditCard className="h-4 w-4" />
+      },
+      completed: {
+        icon: <CheckCircle2 className="h-4 w-4" />,
+        style: 'border-green-400 bg-green-400/10 text-green-400',
+        statusIcon: <CreditCard className="h-4 w-4" />
+      },
+      unpaid: {
+        icon: <XCircle className="h-4 w-4" />,
+        style: 'border-red-400 bg-red-400/10 text-red-400',
+        statusIcon: <CreditCard className="h-4 w-4" />
+      }
     };
-    return statusStyles[status?.toLowerCase()] || 'border-gray-400 bg-gray-400/10 text-gray-400';
+    return (
+      statusInfo[status?.toLowerCase()] || {
+        icon: <AlertCircle className="h-4 w-4" />,
+        style: 'border-gray-400 bg-gray-400/10 text-gray-400'
+      }
+    );
+  };
+
+  const getDeliveryStatusInfo = status => {
+    const statusInfo = {
+      delivered: {
+        icon: <CheckCircle2 className="h-4 w-4" />,
+        style: 'border-green-400 bg-green-400/10 text-green-400',
+        statusIcon: <CheckCircle2 className="h-4 w-4" />
+      },
+      pending: {
+        icon: <Truck className="h-4 w-4" />,
+        style: 'border-blue-400 bg-blue-400/10 text-blue-400',
+        statusIcon: <Clock className="h-4 w-4" />
+      },
+      processing: {
+        icon: <Clock className="h-4 w-4" />,
+        style: 'border-violet-400 bg-violet-400/10 text-violet-400',
+        statusIcon: <Clock className="h-4 w-4" />
+      }
+    };
+    return (
+      statusInfo[status?.toLowerCase()] || {
+        icon: <AlertCircle className="h-4 w-4" />,
+        style: 'border-gray-400 bg-gray-400/10 text-gray-400'
+      }
+    );
   };
 
   if (isLoading) {
@@ -58,7 +115,6 @@ export default function RequestDeliveryPage() {
 
   return (
     <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
-      {/* Header */}
       <div className="flex items-center gap-2 border-b-2 border-gray-800 pb-2">
         <Box className="h-5 w-5 text-violet-400" />
         <h2 className="text-lg font-medium text-gray-100">My Deliveries</h2>
@@ -69,7 +125,6 @@ export default function RequestDeliveryPage() {
           <div
             key={delivery._id}
             className="rounded-xl border-2 border-gray-800 bg-transparent p-6 transition-all hover:border-gray-700">
-            {/* Order Header */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <Package className="h-5 w-5 text-violet-400" />
@@ -79,14 +134,18 @@ export default function RequestDeliveryPage() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                <span
-                  className={`rounded-xl border-2 px-4 py-2 text-sm font-medium ${getStatusStyle(delivery.paymentStatus)}`}>
-                  {delivery.paymentStatus}
-                </span>
-                <span
-                  className={`rounded-xl border-2 px-4 py-2 text-sm font-medium ${getStatusStyle(delivery.deliveryStatus)}`}>
-                  {delivery.deliveryStatus}
-                </span>
+                <div
+                  className={`flex items-center gap-2 rounded-xl border-2 px-4 py-2 ${getPaymentStatusInfo(delivery.paymentStatus).style}`}>
+                  {getPaymentStatusInfo(delivery.paymentStatus).statusIcon}
+                  <span className="text-sm">{delivery.paymentStatus}</span>
+                  {getPaymentStatusInfo(delivery.paymentStatus).icon}
+                </div>
+                <div
+                  className={`flex items-center gap-2 rounded-xl border-2 px-4 py-2 ${getDeliveryStatusInfo(delivery.deliveryStatus).style}`}>
+                  {getDeliveryStatusInfo(delivery.deliveryStatus).icon}
+                  <span className="text-sm">{delivery.deliveryStatus}</span>
+                  {getDeliveryStatusInfo(delivery.deliveryStatus).statusIcon}
+                </div>
               </div>
             </div>
 
@@ -132,7 +191,8 @@ export default function RequestDeliveryPage() {
                     <div>
                       <p className="text-sm text-gray-500">Dimensions</p>
                       <p className="text-gray-100">
-                        {delivery.packageDimensions.length} × {delivery.packageDimensions.width} × {delivery.packageDimensions.height} cm
+                        {delivery.packageDimensions.length} × {delivery.packageDimensions.width} ×{' '}
+                        {delivery.packageDimensions.height} cm
                       </p>
                     </div>
                   </div>
@@ -166,7 +226,7 @@ export default function RequestDeliveryPage() {
                 <div className="space-y-2 text-gray-100">
                   <p>{delivery.pickupLocation.address}</p>
                   <p>
-                    {delivery.pickupLocation.city}, {delivery.pickupLocation.ipcode}
+                    {delivery.pickupLocation.city}, {delivery.pickupLocation.zipcode}
                   </p>
                   <p>{delivery.pickupLocation.country}</p>
                 </div>
@@ -201,8 +261,6 @@ export default function RequestDeliveryPage() {
             </div>
           </div>
         ))}
-
-        {/* Empty State remains the same */}
       </div>
     </div>
   );
