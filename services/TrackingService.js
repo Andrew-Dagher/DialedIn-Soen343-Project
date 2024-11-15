@@ -84,22 +84,24 @@ async function updateTrackingPhase(packageId) {
     }
 
     if (currentIndex >= deliveryStages.length - 1) {
+      // Package already delivered, no further updates beyond 100%
       trackingData.locationDetails = deliveryStages[deliveryStages.length - 1];
+      trackingData.deliveryProgress = 100; // Ensure it is set to 100%
       console.log(`Package ${packageId} already delivered.`);
+      // No notification is sent since it is already at the final stage
     } else {
+      // Move to the next stage
       const nextStage = deliveryStages[currentIndex + 1];
       trackingData.locationDetails = nextStage;
       trackingData.deliveryProgress = nextStage.progress;
       console.log(`Package ${packageId} updated to progress: ${nextStage.progress}%`);
+
+      // Send email notification for progress change, including reaching 100%
+      trackingSubject.notify(trackingData);
     }
 
+    // Save the updated tracking data to the database
     await trackingData.save();
-
-    if (trackingData.deliveryProgress !== trackingData.lastNotifiedProgress) {
-      trackingSubject.notify(trackingData); 
-      trackingData.lastNotifiedProgress = trackingData.deliveryProgress;
-      await trackingData.save(); 
-    }
 
     return trackingData;
   } catch (error) {
@@ -107,6 +109,7 @@ async function updateTrackingPhase(packageId) {
     throw error;
   }
 }
+
 
 
 async function handleUserTrackingRequest(packageId) {
