@@ -5,18 +5,29 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Menu, X, User } from 'lucide-react';
+import { useUser } from '@auth0/nextjs-auth0/client';
 
 const tabs = [
   { name: 'Home', link: '/', icon: null },
   { name: 'Tracking', link: '/tracking' },
   { name: 'Get a Quote', link: '/Quotations' },
   { name: 'Ship Now', link: '/request-delivery' },
-  { name: 'Login', link: '/login', icon: <User className="h-4 w-4 text-violet-400" /> }
+  { name: 'Login', link: '/api/auth/login', icon: <User className="h-4 w-4 text-violet-400" /> }
+];
+
+const tabsLoggedIn = [
+  { name: 'Home', link: '/', icon: null },
+  { name: 'Tracking', link: '/tracking' },
+  { name: 'Get a Quote', link: '/Quotations' },
+  { name: 'Ship Now', link: '/request-delivery' },
+  { name: 'Log Out', a: '/api/auth/logout', icon: <User className="h-4 w-4 text-violet-400" /> }
 ];
 
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const { user, isLoading } = useUser();
+
 
   return (
     <header className="fixed left-0 right-0 top-0 z-50">
@@ -30,7 +41,34 @@ const NavBar = () => {
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden items-center gap-8 md:flex">
+          {!isLoading&& user &&
+          (<div className="hidden items-center gap-8 md:flex">
+            {tabsLoggedIn.map(tab => {
+              const isActive = pathname === tab.a;
+              return (
+                <a
+                  href={tab.a}
+                  key={tab.name}
+                  className={`group relative hover:no-underline text-sm font-medium ${isActive ? 'text-violet-400' : 'text-gray-400'} `}>
+                  <span className="relative z-10 flex items-center gap-2 transition-colors duration-200 group-hover:text-white">
+                    {tab.icon && (
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-500/10">
+                        <User className="h-4 w-4 text-violet-400" />
+                      </div>
+                    )}
+                    {tab.name}
+                  </span>
+                  {/* Active/Hover Indicator */}
+                  <div
+                    className={`absolute -bottom-1.5 left-0 h-0.5 transition-all duration-200 ease-out ${
+                      isActive ? 'w-full bg-violet-400' : 'w-0 bg-gray-400 group-hover:w-full'
+                    } `}
+                  />
+                </a>
+              );
+            })}
+          </div>)}
+          { !isLoading && !user &&(<div className="hidden items-center gap-8 md:flex">
             {tabs.map(tab => {
               const isActive = pathname === tab.link;
               return (
@@ -56,7 +94,8 @@ const NavBar = () => {
               );
             })}
           </div>
-
+)}
+          
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsOpen(!isOpen)}

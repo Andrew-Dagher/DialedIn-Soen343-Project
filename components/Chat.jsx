@@ -18,7 +18,7 @@ const Chat = () => {
         <a
           key={index}
           href={part}
-          className="text-teal-400 underline ml-1 hover:text-teal-300 transition-colors"
+          className="ml-1 text-teal-400 underline transition-colors hover:text-teal-300"
           target="_blank"
           rel="noopener noreferrer">
           Click here to view tracking details
@@ -38,7 +38,7 @@ const Chat = () => {
   const handleSubmit = async e => {
     e.preventDefault();
     if (!question.trim() || loading) return;
-    
+
     setLoading(true);
     console.log('Sending request with question:', question);
     setConversation(prev => [...prev, { role: 'user', content: question }]);
@@ -83,66 +83,72 @@ const Chat = () => {
   };
 
   return (
-    <div>
+  <div>
       {/* Chat Button */}
       <button
         onClick={() => setChatOpen(!chatOpen)}
         className={`
-          fixed bottom-5 right-5 z-50 p-4
-          rounded-full bg-teal-400 text-white
-          shadow-lg transition-all duration-200
-          hover:bg-teal-500 hover:scale-105
-          focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2
+          fixed bottom-4 right-4 sm:bottom-5 sm:right-5 z-50 
+          flex items-center justify-center
+          w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 
+          rounded-full border-2 border-teal-400 bg-teal-400 
+          text-white shadow-lg transition-all duration-200 
+          hover:scale-105 hover:bg-teal-500 
+          focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 
           ${chatOpen ? 'scale-110' : ''}
         `}
       >
-        <MessageCircle className="h-6 w-6" />
+        <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
       </button>
 
       {/* Chat Window */}
       {chatOpen && (
-        <div className="fixed bottom-20 right-5 z-50 flex h-[500px] w-[380px] flex-col rounded-2xl bg-gray-950 shadow-xl border-2 border-gray-800">
+        <div className={`
+          fixed z-50 
+          sm:bottom-20 sm:right-5 sm:w-[380px] sm:h-[500px]
+          bottom-0 right-0 w-full h-[85vh]
+          flex flex-col rounded-t-2xl sm:rounded-2xl 
+          border-t-2 sm:border-2 border-gray-800 
+          bg-gray-950 shadow-xl
+        `}>
           {/* Chat Header */}
           <div className="relative flex items-center justify-between rounded-t-2xl bg-teal-400 px-4 py-3">
             <h3 className="text-lg font-semibold text-white">DialedIn Assistant</h3>
             <button
               onClick={() => setChatOpen(false)}
-              className="rounded-full p-1 text-white hover:bg-teal-500 transition-colors"
+              className="rounded-full p-1 text-white transition-colors hover:bg-teal-500"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
 
           {/* Chat Messages */}
-          <div 
+          <div
             ref={chatWindowRef}
-            className="flex-1 overflow-y-auto p-4 space-y-4"
+            className="flex-1 space-y-4 overflow-y-auto p-4"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             <style jsx global>{`
-              /* Hide scrollbar for Chrome, Safari and Opera */
               .overflow-y-auto::-webkit-scrollbar {
                 display: none;
               }
             `}</style>
-            
+
             {conversation.map((msg, index) => (
-              <div
-                key={index}
+              <div 
+                key={index} 
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
                   className={`
-                    max-w-[75%] rounded-2xl px-4 py-2 text-sm
+                    max-w-[75%] rounded-2xl px-4 py-2 
                     ${msg.role === 'user' 
                       ? 'bg-teal-400 text-white' 
                       : 'bg-gray-800 text-gray-100'
                     }
+                    text-sm sm:text-base
                   `}
                 >
-                  <div className="font-medium mb-1">
-                    {msg.role === 'user' ? 'You' : 'Assistant'}
-                  </div>
                   <div className="leading-relaxed">
                     {msg.role === 'assistant' ? formatMessage(msg.content) : msg.content}
                   </div>
@@ -152,11 +158,8 @@ const Chat = () => {
 
             {typing && (
               <div className="flex justify-start">
-                <div className="max-w-[75%] rounded-2xl bg-gray-800 px-4 py-2 text-sm text-gray-100">
-                  <div className="font-medium mb-1">Assistant</div>
-                  <div className="leading-relaxed">
-                    {formatMessage(assistantMessage)}
-                  </div>
+                <div className="max-w-[75%] rounded-2xl bg-gray-800 px-4 py-2 text-sm sm:text-base text-gray-100">
+                  <div className="leading-relaxed">{formatMessage(assistantMessage)}</div>
                 </div>
               </div>
             )}
@@ -164,35 +167,29 @@ const Chat = () => {
 
           {/* Chat Input */}
           <form 
-            onSubmit={handleSubmit}
-            className="border-t-2 border-gray-800 p-4 flex gap-2"
+            onSubmit={handleSubmit} 
+            className="flex gap-2 border-t-2 border-gray-800 p-4 bg-gray-950"
           >
             <input
               type="text"
               placeholder="Type your message..."
               value={question}
-              onChange={(e) => setQuestion(e.target.value)}
+              onChange={e => setQuestion(e.target.value)}
               disabled={loading}
               maxLength={500}
-              className="
-                flex-1 rounded-xl bg-gray-900 px-4 py-2
-                text-sm text-gray-100 placeholder-gray-500
-                border-2 border-gray-800 
-                focus:border-teal-400 focus:outline-none
-                transition-colors
-              "
+              className="flex-1 rounded-xl border-2 border-gray-800 bg-gray-900 
+                       px-4 py-2 text-sm sm:text-base text-gray-100 
+                       placeholder-gray-500 transition-colors focus:border-teal-400 
+                       focus:outline-none"
             />
             <button
               type="submit"
               disabled={loading || !question.trim()}
-              className="
-                rounded-xl bg-teal-400 p-2
-                text-white transition-colors
-                hover:bg-teal-500 disabled:opacity-50
-                disabled:cursor-not-allowed
-                focus:outline-none focus:ring-2 
-                focus:ring-teal-400 focus:ring-offset-2
-              "
+              className="rounded-xl bg-teal-400 p-2 sm:p-3 text-white 
+                       transition-colors hover:bg-teal-500 
+                       focus:outline-none focus:ring-2 focus:ring-teal-400 
+                       focus:ring-offset-2 disabled:cursor-not-allowed 
+                       disabled:opacity-50"
             >
               <Send className="h-5 w-5" />
             </button>
