@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Package, User, Phone, Mail, MapPin, Loader2, Search } from 'lucide-react';
 
 const TrackingForm = ({ initialPackageId }) => {
   const [packageId, setPackageId] = useState(initialPackageId || '');
@@ -49,53 +50,142 @@ const TrackingForm = ({ initialPackageId }) => {
     fetchTrackingData(packageId);
   };
 
+  const inputClassName = `
+    w-full pl-10 pr-4 py-2.5 rounded-xl bg-gray-900/50 
+    border-2 border-gray-800 text-sm text-gray-100 
+    placeholder-gray-500 focus:border-violet-500 
+    focus:outline-none transition-colors hover:border-gray-700
+  `;
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col gap-4">
-        <input
-          type="text"
-          placeholder="Enter Package ID"
-          value={packageId}
-          onChange={handleInputChange}
-          className="w-full border-gray-800 border-2 rounded-xl bg-transparent p-3 text-sm text-gray-100 placeholder-gray-500 transition-colors focus:border-violet-400 focus:outline-none"
-        />
-        <button
-          onClick={handleTrackClick}
-          className="rounded-lg bg-violet-400 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-violet-700"
-        >
-          Track
-        </button>
-        {loading && <p>Loading...</p>}
-        {error && <p className="text-red-500">{error}</p>}
-        {trackingData && (
-          <div className="bg-gray-800 p-4 rounded-lg text-gray-100 mt-4 shadow-lg">
-            <h2 className="text-lg font-medium mb-2">Tracking Information</h2>
-            <p><strong>Message:</strong> {trackingData.message}</p>
-            <p><strong>Package ID:</strong> {trackingData.data?.packageId}</p>
-            <p><strong>Client Contact:</strong> {trackingData.data?.clientContact}</p>
-            <p><strong>Client Name:</strong> {trackingData.data?.clientName}</p>
-            <p><strong>Client Phone:</strong> {trackingData.data?.clientPhone}</p>
-            {trackingData.data?.locationDetails && (
-              <div className="mt-2">
-                <p><strong>Location:</strong> {trackingData.data.locationDetails.location}</p>
-                <p><strong>Description:</strong> {trackingData.data.locationDetails.description}</p>
-              </div>
+    <div className="flex flex-col gap-8">
+      {/* Search Form */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2">
+              <Package className="h-4 w-4 text-gray-500" />
+            </div>
+            <input
+              type="text"
+              placeholder="Enter Package ID"
+              value={packageId}
+              onChange={handleInputChange}
+              className={inputClassName}
+            />
+          </div>
+          <button
+            onClick={handleTrackClick}
+            disabled={loading}
+            className="px-6 py-2.5 rounded-xl font-medium text-sm
+              flex items-center justify-center gap-2 transition-all duration-200
+              bg-violet-500 text-white hover:bg-violet-600 
+              disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Tracking...
+              </>
+            ) : (
+              <>
+                <Search className="h-4 w-4" />
+                Track Package
+              </>
             )}
-            {trackingData.data?.deliveryProgress !== undefined && (
-              <div className="mt-4">
-                <h3 className="text-sm font-medium">Delivery Progress:</h3>
-                <div className="w-full bg-gray-700 rounded-full h-4 mt-2">
-                  <div
-                    className="bg-violet-400 h-4 rounded-full transition-width duration-300"
-                    style={{ width: `${trackingData.data.deliveryProgress}%` }}
-                  ></div>
-                </div>
-                <p className="text-sm mt-1">{trackingData.data.deliveryProgress}% completed</p>
-              </div>
-            )}
+          </button>
+        </div>
+
+        {error && (
+          <div className="flex items-center gap-2 rounded-xl border-2 border-red-500/50 bg-red-500/10 p-4 text-red-400">
+            <span className="text-sm">{error}</span>
           </div>
         )}
       </div>
+
+      {/* Results */}
+      {trackingData && (
+        <div className="space-y-8">
+          {/* Status Message */}
+          <div className="rounded-xl border-2 border-violet-500/50 bg-violet-500/10 p-4">
+            <p className="text-violet-400">{trackingData.message}</p>
+          </div>
+
+          {/* Package Information */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 pb-2 border-b-2 border-gray-800">
+              <Package className="w-5 h-5 text-violet-400" />
+              <h2 className="text-lg font-medium text-gray-100">Package Details</h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex items-center gap-2">
+                <Package className="w-4 h-4 text-gray-500" />
+                <div>
+                  <p className="text-sm text-gray-500">Package ID</p>
+                  <p className="text-gray-100">{trackingData.data?.packageId}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4 text-gray-500" />
+                <div>
+                  <p className="text-sm text-gray-500">Client Name</p>
+                  <p className="text-gray-100">{trackingData.data?.clientName}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-gray-500" />
+                <div>
+                  <p className="text-sm text-gray-500">Client Contact</p>
+                  <p className="text-gray-100">{trackingData.data?.clientContact}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Phone className="w-4 h-4 text-gray-500" />
+                <div>
+                  <p className="text-sm text-gray-500">Client Phone</p>
+                  <p className="text-gray-100">{trackingData.data?.clientPhone}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Location Information */}
+          {trackingData.data?.locationDetails && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b-2 border-gray-800">
+                <MapPin className="w-5 h-5 text-violet-400" />
+                <h2 className="text-lg font-medium text-gray-100">Current Location</h2>
+              </div>
+              <div className="rounded-xl border-2 border-gray-800 bg-gray-900/50 p-4">
+                <p className="text-gray-100 font-medium">{trackingData.data.locationDetails.location}</p>
+                <p className="mt-1 text-gray-500">{trackingData.data.locationDetails.description}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Delivery Progress */}
+          {trackingData.data?.deliveryProgress !== undefined && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b-2 border-gray-800">
+                <Package className="w-5 h-5 text-violet-400" />
+                <h2 className="text-lg font-medium text-gray-100">Delivery Progress</h2>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Progress</span>
+                  <span className="text-sm text-violet-400">{trackingData.data.deliveryProgress}% completed</span>
+                </div>
+                <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-violet-500 rounded-full transition-all duration-500"
+                    style={{ width: `${trackingData.data.deliveryProgress}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
