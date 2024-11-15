@@ -28,6 +28,11 @@ const tabs = [
     mobileIcon: <Send className="h-4 w-4 text-violet-400" />
   },
   {
+    name: 'Add a Review',
+    link: '/Reviews',
+    mobileIcon: <Send className="h-4 w-4 text-violet-400" />
+  },
+  {
     name: 'Login',
     link: '/api/auth/login',
     icon: <User className="h-4 w-4 text-violet-400" />,
@@ -60,6 +65,11 @@ const tabsLoggedIn = [
     name: 'View your Deliveries',
     link: '/deliveries',
     mobileIcon: <Box className="h-4 w-4 text-violet-400" />
+  },
+  {
+    name: 'Add a Review',
+    link: '/Reviews',
+    mobileIcon: <Send className="h-4 w-4 text-violet-400" />
   },
   {
     name: 'Log Out',
