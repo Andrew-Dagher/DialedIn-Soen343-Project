@@ -15,6 +15,7 @@ export default function RequestDeliveryPage() {
         const response = await fetch(`http://localhost:${port}/api/view-deliveries?userId=${user.sub}`);
         const data = await response.json();
         setDeliveries(data);
+        console.log('Deliveries:', data);
       };
       fetchDeliveries();
     }
@@ -123,7 +124,7 @@ export default function RequestDeliveryPage() {
                     <Scale className="h-4 w-4 text-gray-500" />
                     <div>
                       <p className="text-sm text-gray-500">Weight</p>
-                      <p className="text-gray-100">{delivery.weight} kg</p>
+                      <p className="text-gray-100">{delivery.packageDimensions.weight} kg</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -131,7 +132,7 @@ export default function RequestDeliveryPage() {
                     <div>
                       <p className="text-sm text-gray-500">Dimensions</p>
                       <p className="text-gray-100">
-                        {delivery.length} × {delivery.width} × {delivery.height} cm
+                        {delivery.packageDimensions.length} × {delivery.packageDimensions.width} × {delivery.packageDimensions.height} cm
                       </p>
                     </div>
                   </div>
@@ -163,11 +164,11 @@ export default function RequestDeliveryPage() {
                   <h3 className="text-base font-medium text-gray-100">Pickup Location</h3>
                 </div>
                 <div className="space-y-2 text-gray-100">
-                  <p>{delivery.pickupAddress}</p>
+                  <p>{delivery.pickupLocation.address}</p>
                   <p>
-                    {delivery.pickupCity}, {delivery.pickupZipcode}
+                    {delivery.pickupLocation.city}, {delivery.pickupLocation.ipcode}
                   </p>
-                  <p>{delivery.pickupCountry}</p>
+                  <p>{delivery.pickupLocation.country}</p>
                 </div>
               </div>
 
@@ -178,11 +179,11 @@ export default function RequestDeliveryPage() {
                   <h3 className="text-base font-medium text-gray-100">Dropoff Location</h3>
                 </div>
                 <div className="space-y-2 text-gray-100">
-                  <p>{delivery.dropoffAddress}</p>
+                  <p>{delivery.dropoffLocation.address}</p>
                   <p>
-                    {delivery.dropoffCity}, {delivery.dropoffZipcode}
+                    {delivery.dropoffLocation.city}, {delivery.dropoffLocation.zipcode}
                   </p>
-                  <p>{delivery.dropoffCountry}</p>
+                  <p>{delivery.dropoffLocation.country}</p>
                 </div>
               </div>
             </div>
