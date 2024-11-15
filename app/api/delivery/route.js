@@ -23,7 +23,8 @@ export async function POST(req) {
         dropoffAddress,
         dropoffZipcode,
         dropoffCity,
-        shippingMethod
+        shippingMethod,
+        userId
     } = await req.json();
 
     // Validate that all required fields are provided
@@ -76,6 +77,7 @@ export async function POST(req) {
         dropoffCity,
         shippingMethod,
         status: "pending", // Payment status set to pending until paid
+        userId
     };
 
     return new Response(JSON.stringify({ message: "Temporary delivery request created", requestId }), { status: 200 });

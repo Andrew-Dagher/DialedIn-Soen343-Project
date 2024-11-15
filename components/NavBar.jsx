@@ -20,7 +20,8 @@ const tabsLoggedIn = [
   { name: 'Tracking', link: '/tracking' },
   { name: 'Get a Quote', link: '/Quotations' },
   { name: 'Ship Now', link: '/request-delivery' },
-  { name: 'Log Out', a: '/api/auth/logout', icon: <User className="h-4 w-4 text-violet-400" /> }
+  { name: 'View your Deliveries', link: '/api/view', },
+  { name: 'Log Out', link: '/api/auth/logout', icon: <User className="h-4 w-4 text-violet-400" /> }
 ];
 
 const NavBar = () => {
@@ -37,17 +38,41 @@ const NavBar = () => {
         <div className="flex h-20 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="group relative">
-            <span className="text-xl font-bold text-white transition-colors group-hover:text-violet-400">DAILEDIN</span>
+            <span className="text-xl font-bold text-white transition-colors group-hover:text-violet-400">DIALEDIN</span>
           </Link>
 
           {/* Desktop Menu */}
           {!isLoading&& user &&
           (<div className="hidden items-center gap-8 md:flex">
             {tabsLoggedIn.map(tab => {
-              const isActive = pathname === tab.a;
+              const isActive = pathname === tab.link;
+              if (tab.name!='Log Out'){
+
               return (
+                <Link
+                  href={tab.link}
+                  key={tab.name}
+                  className={`group relative hover:no-underline text-sm font-medium ${isActive ? 'text-violet-400' : 'text-gray-400'} `}>
+                  <span className="relative z-10 flex items-center gap-2 transition-colors duration-200 group-hover:text-white">
+                    {tab.icon && (
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-500/10">
+                        <User className="h-4 w-4 text-violet-400" />
+                      </div>
+                    )}
+                    {tab.name}
+                  </span>
+                  {/* Active/Hover Indicator */}
+                  <div
+                    className={`absolute -bottom-1.5 left-0 h-0.5 transition-all duration-200 ease-out ${
+                      isActive ? 'w-full bg-violet-400' : 'w-0 bg-gray-400 group-hover:w-full'
+                    } `}
+                  />
+                </Link>
+              );}
+              else{
+                return(
                 <a
-                  href={tab.a}
+                  href={tab.link}
                   key={tab.name}
                   className={`group relative hover:no-underline text-sm font-medium ${isActive ? 'text-violet-400' : 'text-gray-400'} `}>
                   <span className="relative z-10 flex items-center gap-2 transition-colors duration-200 group-hover:text-white">
@@ -65,7 +90,8 @@ const NavBar = () => {
                     } `}
                   />
                 </a>
-              );
+            )}
+
             })}
           </div>)}
           { !isLoading && !user &&(<div className="hidden items-center gap-8 md:flex">
