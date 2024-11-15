@@ -12,6 +12,7 @@ const TrackingSchema = new Schema({
     progress: { type: Number, default: 0 },
   },
   deliveryProgress: { type: Number, default: 0 },
+  userId: {type: String, default: null}
 });
 
 module.exports = mongoose.models.Tracking || mongoose.model('Tracking', TrackingSchema);

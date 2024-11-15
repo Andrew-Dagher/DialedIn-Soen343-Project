@@ -61,6 +61,10 @@ const OrderDeliverySchema = new Schema({
     type: Date,
     default: Date.now,
   },
+  userId:{
+    type: String,
+    default: '0',
+  }
 });
 
 // Check if the model is already compiled to prevent OverwriteModelError

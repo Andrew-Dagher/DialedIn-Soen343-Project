@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import DeliveryRequestService from '../services/DeliveryRequestService';
+import { useUser } from '@auth0/nextjs-auth0/client';
 import {
   User,
   Phone,
@@ -21,6 +22,7 @@ import {
 } from 'lucide-react';
 
 const RequestDeliveryForm = () => {
+  const { user, isLoading } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
@@ -44,7 +46,8 @@ const RequestDeliveryForm = () => {
     dropoffAddress: '',
     dropoffZipcode: '',
     dropoffCity: '',
-    shippingMethod: ''
+    shippingMethod: '',
+    userId: user?.sub
   });
   const [completedSteps, setCompletedSteps] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,7 +60,7 @@ const RequestDeliveryForm = () => {
   }, [searchParams]);
 
   const handleChange = (field, value) => {
-    setFormData({ ...formData, [field]: value });
+    setFormData({ ...formData, [field]: value, userId: user?.sub  });
   };
 
   const validateStep = () => {

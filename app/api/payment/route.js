@@ -6,6 +6,7 @@ import PaymentService from '../../../services/PaymentService';
 import OrderDelivery from '../../../models/OrderDelivery';
 import Tracking from '../../../models/Tracking';
 
+
 export async function POST(request) {
   await connectToDatabase(); // Ensure the database is connected
 
@@ -63,6 +64,7 @@ export async function POST(request) {
         },
         shippingMethod: deliveryDetails.shippingMethod,
         paymentStatus: 'completed',
+        userId: deliveryDetails.userId,
       });
 
       const tracking = new Tracking({
@@ -76,8 +78,10 @@ export async function POST(request) {
           progress: 0,
         },
         deliveryProgress: 0,
+        userId: deliveryDetails.userId
       });
 
+      
       await tracking.save();
 
       await delivery.save();
