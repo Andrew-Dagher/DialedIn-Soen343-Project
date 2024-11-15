@@ -31,12 +31,35 @@ export default function RequestDeliveryPage() {
         const port = window.location.port;
         const response = await fetch(`http://localhost:${port}/api/view-deliveries?userId=${user.sub}`);
         const data = await response.json();
-        setDeliveries(data);
         console.log('Deliveries:', data);
+
+        const trackingPromises = data.map(async (delivery) => {
+          const trackingResponse = await fetch(`/api/track/${delivery.requestID}`, {
+            method: 'POST',
+          });
+
+          if (!trackingResponse.ok) {
+            throw new Error('Failed to fetch tracking information.');
+          }
+
+          const trackingData = await trackingResponse.json();
+          console.log('Tracking data:', trackingData);
+
+          // Add the tracking status to the delivery item
+          delivery.trackingStatus = trackingData.data.locationDetails.location;
+
+          return delivery;
+        });
+
+        // Wait for all the tracking data to be added to the deliveries
+        const updatedDeliveries = await Promise.all(trackingPromises);
+        setDeliveries(updatedDeliveries);
       };
+
       fetchDeliveries();
     }
   }, [user]);
+
 
   const getPaymentStatusInfo = status => {
     const statusInfo = {
@@ -141,10 +164,10 @@ export default function RequestDeliveryPage() {
                   {getPaymentStatusInfo(delivery.paymentStatus).icon}
                 </div>
                 <div
-                  className={`flex items-center gap-2 rounded-xl border-2 px-4 py-2 ${getDeliveryStatusInfo(delivery.deliveryStatus).style}`}>
-                  {getDeliveryStatusInfo(delivery.deliveryStatus).icon}
-                  <span className="text-sm">{delivery.deliveryStatus}</span>
-                  {getDeliveryStatusInfo(delivery.deliveryStatus).statusIcon}
+                  className={`flex items-center gap-2 rounded-xl border-2 px-4 py-2 ${getDeliveryStatusInfo(delivery.trackingStatus).style}`}>
+                  {getDeliveryStatusInfo(delivery.trackingStatus).icon}
+                  <span className="text-sm">{delivery.trackingStatus}</span>
+                  {getDeliveryStatusInfo(delivery.trackingStatus).statusIcon}
                 </div>
               </div>
             </div>
