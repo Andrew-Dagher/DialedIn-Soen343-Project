@@ -12,6 +12,7 @@ const tabs = [
   { name: 'Tracking', link: '/tracking' },
   { name: 'Get a Quote', link: '/Quotations' },
   { name: 'Ship Now', link: '/request-delivery' },
+  {name: 'Add a Review', link: 'Reviews'},
   { name: 'Login', link: '/api/auth/login', icon: <User className="h-4 w-4 text-violet-400" /> }
 ];
 
@@ -20,7 +21,8 @@ const tabsLoggedIn = [
   { name: 'Tracking', link: '/tracking' },
   { name: 'Get a Quote', link: '/Quotations' },
   { name: 'Ship Now', link: '/request-delivery' },
-  { name: 'View your Deliveries', link: '/deliveries' },
+  { name: 'View your Deliveries', link: '/deliveries'},
+  {name: 'Add a Review', link: 'Reviews'},
   { name: 'Log Out', link: '/api/auth/logout', icon: <User className="h-4 w-4 text-violet-400" /> }
 ];
 
