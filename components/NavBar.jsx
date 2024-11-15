@@ -7,12 +7,6 @@ import { Menu, X, User, Home, Package, DollarSign, Send, Box, LogOut } from 'luc
 import { useUser } from '@auth0/nextjs-auth0/client';
 
 const tabs = [
-  { name: 'Home', link: '/', icon: null },
-  { name: 'Tracking', link: '/tracking' },
-  { name: 'Get a Quote', link: '/Quotations' },
-  { name: 'Ship Now', link: '/request-delivery' },
-  {name: 'Add a Review', link: 'Reviews'},
-  { name: 'Login', link: '/api/auth/login', icon: <User className="h-4 w-4 text-violet-400" /> }
   {
     name: 'Home',
     link: '/',
@@ -34,6 +28,11 @@ const tabs = [
     mobileIcon: <Send className="h-4 w-4 text-violet-400" />
   },
   {
+    name: 'Add a Review',
+    link: '/Reviews',
+    mobileIcon: <Send className="h-4 w-4 text-violet-400" />
+  },
+  {
     name: 'Login',
     link: '/api/auth/login',
     icon: <User className="h-4 w-4 text-violet-400" />,
@@ -42,12 +41,42 @@ const tabs = [
 ];
 
 const tabsLoggedIn = [
-  { name: 'Home', link: '/', icon: null },
-  { name: 'Tracking', link: '/tracking' },
-  { name: 'Get a Quote', link: '/Quotations' },
-  { name: 'Ship Now', link: '/request-delivery' },
-  { name: 'View your Deliveries', link: '/deliveries' },
-  { name: 'Log Out', link: '/api/auth/logout', icon: <User className="h-4 w-4 text-violet-400" /> }
+  {
+    name: 'Home',
+    link: '/',
+    mobileIcon: <Home className="h-4 w-4 text-violet-400" />
+  },
+  {
+    name: 'Tracking',
+    link: '/tracking',
+    mobileIcon: <Package className="h-4 w-4 text-violet-400" />
+  },
+  {
+    name: 'Get a Quote',
+    link: '/Quotations',
+    mobileIcon: <DollarSign className="h-4 w-4 text-violet-400" />
+  },
+  {
+    name: 'Ship Now',
+    link: '/request-delivery',
+    mobileIcon: <Send className="h-4 w-4 text-violet-400" />
+  },
+  {
+    name: 'View your Deliveries',
+    link: '/deliveries',
+    mobileIcon: <Box className="h-4 w-4 text-violet-400" />
+  },
+  {
+    name: 'Add a Review',
+    link: '/Reviews',
+    mobileIcon: <Send className="h-4 w-4 text-violet-400" />
+  },
+  {
+    name: 'Log Out',
+    link: '/api/auth/logout',
+    icon: <User className="h-4 w-4 text-violet-400" />,
+    mobileIcon: <LogOut className="h-4 w-4 text-violet-400" />
+  }
 ];
 
 const NavBar = () => {
