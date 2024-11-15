@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, MapPin, Truck } from 'luuserIde-react';
+import { Package, MapPin, Truck } from 'lucide-react';
 
 export default function QuotationForm({ formData, setFormData, handleSubmit, isSubmitting }) {
   const handleChange = e => {

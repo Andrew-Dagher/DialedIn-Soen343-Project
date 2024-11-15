@@ -83,7 +83,7 @@ export async function POST(request) {
 
       
       await tracking.save();
-      console.log("dev"+delivery)
+
       await delivery.save();
     }
 

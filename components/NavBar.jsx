@@ -20,7 +20,7 @@ const tabsLoggedIn = [
   { name: 'Tracking', link: '/tracking' },
   { name: 'Get a Quote', link: '/Quotations' },
   { name: 'Ship Now', link: '/request-delivery' },
-  { name: 'View your Deliveries', link: '/api/view', },
+  { name: 'View your Deliveries', link: '/deliveries' },
   { name: 'Log Out', link: '/api/auth/logout', icon: <User className="h-4 w-4 text-violet-400" /> }
 ];
 
