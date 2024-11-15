@@ -1,26 +1,22 @@
-import connectToDatabase from '../../../utils/mongodb'; 
-import { handleUserTrackingRequest } from '../../../services/TrackingService'; 
-
+import connectToDatabase from '../../../../utils/mongodb'; 
+import { handleUserTrackingRequest } from '../../../../services/TrackingService'; 
 
 export async function POST(req) {
   try {
     await connectToDatabase();
 
-  
-    const { searchParams } = new URL(req.url);
-    const packageId = searchParams.get('packageId');
+    // Extract the packageId from the URL parameters
+    const packageId = req.nextUrl?.pathname.split('/').pop(); // This will extract the last part of the URL, which should be your packageId
 
     if (!packageId) {
       return new Response(JSON.stringify({ error: 'PackageId is required' }), { status: 400 });
     }
-
 
     const trackingData = await handleUserTrackingRequest(packageId);
 
     if (trackingData.error) {
       return new Response(JSON.stringify({ error: trackingData.error }), { status: 500 });
     }
-
 
     const responseData = {
       message: `Tracking updated for packageId: ${packageId}`,
