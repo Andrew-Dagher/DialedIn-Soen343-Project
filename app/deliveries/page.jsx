@@ -33,9 +33,9 @@ export default function RequestDeliveryPage() {
         const data = await response.json();
         console.log('Deliveries:', data);
 
-        const trackingPromises = data.map(async (delivery) => {
+        const trackingPromises = data.map(async delivery => {
           const trackingResponse = await fetch(`/api/track/${delivery.requestID}`, {
-            method: 'POST',
+            method: 'POST'
           });
 
           if (!trackingResponse.ok) {
@@ -59,7 +59,6 @@ export default function RequestDeliveryPage() {
       fetchDeliveries();
     }
   }, [user]);
-
 
   const getPaymentStatusInfo = status => {
     const statusInfo = {
@@ -90,7 +89,7 @@ export default function RequestDeliveryPage() {
   const getDeliveryStatusInfo = status => {
     const statusInfo = {
       delivered: {
-        icon: <CheckCircle2 className="h-4 w-4" />,
+        icon: <Truck className="h-4 w-4" />,
         style: 'border-green-400 bg-green-400/10 text-green-400',
         statusIcon: <CheckCircle2 className="h-4 w-4" />
       },
@@ -100,7 +99,7 @@ export default function RequestDeliveryPage() {
         statusIcon: <Clock className="h-4 w-4" />
       },
       processing: {
-        icon: <Clock className="h-4 w-4" />,
+        icon: <Truck className="h-4 w-4" />,
         style: 'border-violet-400 bg-violet-400/10 text-violet-400',
         statusIcon: <Clock className="h-4 w-4" />
       }
