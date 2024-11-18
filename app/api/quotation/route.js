@@ -1,39 +1,49 @@
-// app/api/quotation/route.js
-
 import { NextResponse } from 'next/server';
 import QuotationService from '../../../services/QuotationService';
 
+// Ensure Google Maps API key is available
+if (!process.env.GOOGLE_MAPS_API_KEY) {
+  throw new Error('GOOGLE_MAPS_API_KEY is not set in environment variables');
+}
 
 export async function POST(req) {
   try {
     const body = await req.json();
     const { weight, dimensions, pickup, dropoff, shippingMethod } = body;
 
-    const estimatedCost = QuotationService.getQuote({
+    // Validate required fields
+    if (!weight || !dimensions || !pickup || !dropoff || !shippingMethod) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    const quote = await QuotationService.getQuote({
       weight,
       dimensions,
       pickup,
       dropoff,
       shippingMethod,
+      includeBreakdown: true
     });
 
-    return NextResponse.json({ estimatedCost });
+    return NextResponse.json({
+      success: true,
+      data: {
+        estimatedCost: quote.total,
+        breakdown: quote.breakdown,
+        distance: quote.distance,
+        estimatedDelivery: quote.estimatedDelivery,
+        addresses: quote.addresses
+      }
+    });
+
   } catch (error) {
+    console.error('Quotation error:', error);
     return NextResponse.json(
-      { error: error.message }, 
+      { error: error.message || 'Failed to calculate quotation' },
       { status: 400 }
     );
   }
-}
-
-// Optionally, add OPTIONS method to handle preflight requests
-export async function OPTIONS(req) {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  });
 }

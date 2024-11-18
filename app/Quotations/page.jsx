@@ -7,32 +7,33 @@ import { useRouter } from 'next/navigation';
 export default function Page() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    weight: '',
-    length: '',
-    width: '',
-    height: '',
-    pickupCountry: '',
-    pickupAddress: '',
-    pickupZipcode: '',
-    pickupCity: '',
-    dropoffCountry: '',
-    dropoffAddress: '',
-    dropoffZipcode: '',
-    dropoffCity: '',
+    weight: '5',
+    length: '10',
+    width: '10',
+    height: '10',
+    pickupCountry: 'CA',
+    pickupAddress: '1849 Avenue Lincoln',
+    pickupZipcode: 'H3H 1H5',
+    pickupCity: 'Montreal',
+    dropoffCountry: 'US',
+    dropoffAddress: '8866 Jamacha Rd',
+    dropoffZipcode: '91977',
+    dropoffCity: 'Spring Valley',
     shippingMethod: ''
   });
-  const [quote, setQuote] = useState(null);
+  const [quoteData, setQuoteData] = useState(null);
   const [error, setError] = useState(null);
   const [accepted, setAccepted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async e => {
     e.preventDefault();
     setAccepted(false);
+    setIsLoading(true);
+    setError(null);
 
     try {
       const requestBody = {
-        id: Math.floor(Math.random() * 1000),
-        estimatedCost: quote,
         weight: parseFloat(formData.weight),
         dimensions: {
           length: parseFloat(formData.length),
@@ -60,46 +61,113 @@ export default function Page() {
         body: JSON.stringify(requestBody)
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch the quotation');
+        throw new Error(data.error || 'Failed to fetch the quotation');
       }
 
-      const data = await response.json();
-      setQuote(data.estimatedCost);
+      setQuoteData(data.data);
       setError(null);
     } catch (err) {
       console.error('Error in handleSubmit:', err);
       setError(err.message);
-      setQuote(null);
+      setQuoteData(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleAccept = () => {
     setAccepted(true);
-    const encodedData = encodeURIComponent(JSON.stringify(formData));
+    const deliveryData = {
+      ...formData,
+      quoteData: quoteData,
+      acceptedAt: new Date().toISOString()
+    };
+    const encodedData = encodeURIComponent(JSON.stringify(deliveryData));
     router.push(`/request-delivery?data=${encodedData}`);
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto mt-6 sm:mt-8 md:mt-10 px-4 sm:px-6 md:px-8">
+    <div className="mx-auto mt-6 w-full max-w-xl px-4 sm:mt-8 sm:px-6 md:mt-10 md:px-8">
       <div className="rounded-xl border-2 border-gray-800 bg-gray-950 p-4 sm:p-6 md:p-8">
-        <h1 className="text-2xl sm:text-3xl font-semibold text-gray-100 mb-2">Delivery Quote</h1>
-        <p className="text-base sm:text-lg text-gray-400 mb-6 sm:mb-8">Calculate your delivery cost.</p>
+        <h1 className="mb-2 text-2xl font-semibold text-gray-100 sm:text-3xl">Delivery Quote</h1>
+        <p className="mb-6 text-base text-gray-400 sm:mb-8 sm:text-lg">Calculate your delivery cost.</p>
 
-        <QuotationForm formData={formData} setFormData={setFormData} handleSubmit={handleSubmit} />
+        <QuotationForm
+          formData={formData}
+          setFormData={setFormData}
+          handleSubmit={handleSubmit}
+          isSubmitting={isLoading}
+        />
 
-        {quote && !error && (
-          <div className="mt-6 rounded-xl border-2 border-gray-800 bg-transparent p-4 sm:p-6">
-            <p className="text-base text-white font-bold sm:text-lg">
-              Estimated Cost: <span className="font-semibold text-violet-400">${quote}</span>
-            </p>
-            <button
-              onClick={handleAccept}
-              className="mt-4 w-full rounded-xl bg-green-500 px-4 sm:px-6 py-3 sm:py-4 font-medium text-white transition-colors hover:bg-green-600 disabled:opacity-50"
-              disabled={accepted}>
-              Accept Quotation
-            </button>
+        {quoteData && !error && (
+          <div className="mt-6 space-y-4">
+            {/* Quote Summary */}
+            <div className="rounded-xl border-2 border-gray-800 bg-transparent p-4 sm:p-6">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Estimated Cost:</span>
+                <span className="text-2xl font-bold text-violet-400">${quoteData.estimatedCost.toFixed(2)}</span>
+              </div>
+
+              {/* Cost Breakdown */}
+              <div className="mt-4 border-t border-gray-800 pt-4">
+                <h3 className="mb-2 font-semibold text-gray-200">Cost Breakdown:</h3>
+                <div className="space-y-2 text-sm">
+                  {Object.entries(quoteData.breakdown).map(
+                    ([key, value]) =>
+                      key !== 'total' &&
+                      key !== 'totalBeforeTax' && (
+                        <div key={key} className="flex justify-between">
+                          <span className="text-gray-400">
+                            {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
+                          </span>
+                          <span className="text-gray-200">${value.toFixed(2)}</span>
+                        </div>
+                      )
+                  )}
+                </div>
+              </div>
+
+              {/* Delivery Details */}
+              <div className="mt-4 border-t border-gray-800 pt-4">
+                <h3 className="mb-2 font-semibold text-gray-200">Delivery Details:</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Estimated Time:</span>
+                    <span className="text-gray-200">
+                      {quoteData.estimatedDelivery.minDays}-{quoteData.estimatedDelivery.maxDays} business days
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Distance:</span>
+                    <span className="text-gray-200">{quoteData.distance.toFixed(1)} km</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleAccept}
+                disabled={accepted || isLoading}
+                className="mt-6 w-full rounded-xl bg-green-500 px-4 py-3 font-medium text-white transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50 sm:px-6 sm:py-4">
+                {accepted ? 'Quote Accepted' : 'Accept Quotation'}
+              </button>
+            </div>
+
+            {/* Addresses */}
+            <div className="rounded-xl border-2 border-gray-800 bg-transparent p-4 sm:p-6">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="mb-1 font-medium text-gray-400">Pickup Address:</h3>
+                  <p className="text-gray-200">{quoteData.addresses.pickup}</p>
+                </div>
+                <div>
+                  <h3 className="mb-1 font-medium text-gray-400">Delivery Address:</h3>
+                  <p className="text-gray-200">{quoteData.addresses.dropoff}</p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
