@@ -205,29 +205,38 @@ class QuotationService {
 
   static async calculateDistance(origin, destination) {
     try {
+      // Use coordinates directly if available
+      const originStr = origin.coordinates ? 
+        `${origin.coordinates.lat},${origin.coordinates.lng}` :
+        `${origin.location.lat},${origin.location.lng}`;
+        
+      const destinationStr = destination.coordinates ? 
+        `${destination.coordinates.lat},${destination.coordinates.lng}` :
+        `${destination.location.lat},${destination.location.lng}`;
+  
       const url = new URL('https://maps.googleapis.com/maps/api/distancematrix/json');
-      url.searchParams.append('origins', `${origin.location.lat},${origin.location.lng}`);
-      url.searchParams.append('destinations', `${destination.location.lat},${destination.location.lng}`);
+      url.searchParams.append('origins', originStr);
+      url.searchParams.append('destinations', destinationStr);
       url.searchParams.append('key', this.GOOGLE_MAPS_API_KEY);
-
+  
       const response = await fetch(url);
       const data = await response.json();
-
+  
       if (data.status !== 'OK') {
         throw new Error('Failed to calculate distance');
       }
-
+  
       const distance = data.rows[0].elements[0].distance.value / 1000;
       return Math.round(distance);
-
+  
     } catch (error) {
       console.error('Distance calculation error, falling back to straight-line distance');
-      return this.calculateHaversineDistance(
-        origin.location,
-        destination.location
-      );
+      const point1 = origin.coordinates || origin.location;
+      const point2 = destination.coordinates || destination.location;
+      return this.calculateHaversineDistance(point1, point2);
     }
   }
+  
 
   static calculateHaversineDistance(point1, point2) {
     const R = 6371; // Earth's radius in kilometers

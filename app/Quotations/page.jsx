@@ -11,14 +11,21 @@ export default function Page() {
     length: '10',
     width: '10',
     height: '10',
-    pickupCountry: 'CA',
-    pickupAddress: '1849 Avenue Lincoln',
-    pickupZipcode: 'H3H 1H5',
-    pickupCity: 'Montreal',
-    dropoffCountry: 'US',
-    dropoffAddress: '8866 Jamacha Rd',
-    dropoffZipcode: '91977',
-    dropoffCity: 'Spring Valley',
+    // Pickup location with new structure
+    pickupFormattedAddress: '',
+    pickupAddress: '',
+    pickupCity: '',
+    pickupCountry: '',
+    pickupZipcode: '',
+    pickupCoordinates: null,
+    // Dropoff location with new structure
+    dropoffFormattedAddress: '',
+    dropoffAddress: '',
+    dropoffCity: '',
+    dropoffCountry: '',
+    dropoffZipcode: '',
+    dropoffCoordinates: null,
+    // Shipping method
     shippingMethod: ''
   });
   const [quoteData, setQuoteData] = useState(null);
@@ -44,13 +51,17 @@ export default function Page() {
           country: formData.pickupCountry,
           address: formData.pickupAddress,
           zipcode: formData.pickupZipcode,
-          city: formData.pickupCity
+          city: formData.pickupCity,
+          coordinates: formData.pickupCoordinates,
+          formatted_address: formData.pickupFormattedAddress
         },
         dropoff: {
           country: formData.dropoffCountry,
           address: formData.dropoffAddress,
           zipcode: formData.dropoffZipcode,
-          city: formData.dropoffCity
+          city: formData.dropoffCity,
+          coordinates: formData.dropoffCoordinates,
+          formatted_address: formData.dropoffFormattedAddress
         },
         shippingMethod: formData.shippingMethod
       };
@@ -80,12 +91,38 @@ export default function Page() {
 
   const handleAccept = () => {
     setAccepted(true);
+    // Create a clean version of the delivery data without circular references
     const deliveryData = {
       ...formData,
+      pickup: {
+        formatted_address: formData.pickupFormattedAddress,
+        address: formData.pickupAddress,
+        city: formData.pickupCity,
+        country: formData.pickupCountry,
+        zipcode: formData.pickupZipcode,
+        coordinates: formData.pickupCoordinates
+      },
+      dropoff: {
+        formatted_address: formData.dropoffFormattedAddress,
+        address: formData.dropoffAddress,
+        city: formData.dropoffCity,
+        country: formData.dropoffCountry,
+        zipcode: formData.dropoffZipcode,
+        coordinates: formData.dropoffCoordinates
+      },
+      dimensions: {
+        length: parseFloat(formData.length),
+        width: parseFloat(formData.width),
+        height: parseFloat(formData.height)
+      },
+      weight: parseFloat(formData.weight),
       quoteData: quoteData,
       acceptedAt: new Date().toISOString()
     };
-    const encodedData = encodeURIComponent(JSON.stringify(deliveryData));
+    
+    // Remove any undefined or null values
+    const cleanData = JSON.parse(JSON.stringify(deliveryData));
+    const encodedData = encodeURIComponent(JSON.stringify(cleanData));
     router.push(`/request-delivery?data=${encodedData}`);
   };
 
@@ -160,11 +197,11 @@ export default function Page() {
               <div className="space-y-4">
                 <div>
                   <h3 className="mb-1 font-medium text-gray-400">Pickup Address:</h3>
-                  <p className="text-gray-200">{quoteData.addresses.pickup}</p>
+                  <p className="text-gray-200">{formData.pickupFormattedAddress}</p>
                 </div>
                 <div>
                   <h3 className="mb-1 font-medium text-gray-400">Delivery Address:</h3>
-                  <p className="text-gray-200">{quoteData.addresses.dropoff}</p>
+                  <p className="text-gray-200">{formData.dropoffFormattedAddress}</p>
                 </div>
               </div>
             </div>
