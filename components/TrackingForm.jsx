@@ -17,9 +17,10 @@ const TrackingForm = ({ initialPackageId }) => {
 
   const fetchTrackingData = async (packageIdToTrack) => {
     if (!packageIdToTrack) {
-      setError('Please enter a package ID.');
+      setError('Please enter a valid package ID.');
       return;
     }
+
     setLoading(true);
     setError('');
     setTrackingData(null);
@@ -29,23 +30,31 @@ const TrackingForm = ({ initialPackageId }) => {
         method: 'POST',
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch tracking information.');
+      const data = await response.json();
+
+      console.log(response);
+
+      // Check for errors in response
+      if (!response.ok || data.error) {
+        throw new Error(data.error || 'Failed to fetch tracking information.');
       }
 
-      const data = await response.json();
+      // Set tracking data if successful
       setTrackingData(data);
     } catch (error) {
-      setError(error.message);
+      setTrackingData(null); // Clear tracking data on error
+      setError(error.message); // Display the error message
     } finally {
       setLoading(false);
     }
   };
 
+  // Handle input changes
   const handleInputChange = (e) => {
     setPackageId(e.target.value);
   };
 
+  // Handle button click for tracking
   const handleTrackClick = () => {
     fetchTrackingData(packageId);
   };
@@ -96,6 +105,7 @@ const TrackingForm = ({ initialPackageId }) => {
           </button>
         </div>
 
+        {/* Error Message */}
         {error && (
           <div className="flex items-center gap-2 rounded-xl border-2 border-red-500/50 bg-red-500/10 p-4 text-red-400">
             <span className="text-sm">{error}</span>
@@ -104,7 +114,7 @@ const TrackingForm = ({ initialPackageId }) => {
       </div>
 
       {/* Results */}
-      {trackingData && (
+      {!error && trackingData && (
         <div className="space-y-8">
           {/* Status Message */}
           <div className="rounded-xl border-2 border-violet-500/50 bg-violet-500/10 p-4">
@@ -122,28 +132,28 @@ const TrackingForm = ({ initialPackageId }) => {
                 <Package className="w-4 h-4 text-gray-500" />
                 <div>
                   <p className="text-sm text-gray-500">Package ID</p>
-                  <p className="text-gray-100">{trackingData.data?.packageId}</p>
+                  <p className="text-gray-100">{trackingData.data?.packageId || 'N/A'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4 text-gray-500" />
                 <div>
                   <p className="text-sm text-gray-500">Client Name</p>
-                  <p className="text-gray-100">{trackingData.data?.clientName}</p>
+                  <p className="text-gray-100">{trackingData.data?.clientName || 'N/A'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-gray-500" />
                 <div>
                   <p className="text-sm text-gray-500">Client Contact</p>
-                  <p className="text-gray-100">{trackingData.data?.clientContact}</p>
+                  <p className="text-gray-100">{trackingData.data?.clientContact || 'N/A'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-gray-500" />
                 <div>
                   <p className="text-sm text-gray-500">Client Phone</p>
-                  <p className="text-gray-100">{trackingData.data?.clientPhone}</p>
+                  <p className="text-gray-100">{trackingData.data?.clientPhone || 'N/A'}</p>
                 </div>
               </div>
             </div>
