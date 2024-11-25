@@ -201,15 +201,17 @@ export default function RequestDeliveryPage() {
                   <h3 className="text-base font-medium text-gray-100">Package Details</h3>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3">
-                    <Scale className="h-4 w-4 text-gray-500" />
+                  <div className="flex items-start gap-3">
+                    {' '}
+                    <Scale className="mt-1 h-4 w-4 text-gray-500" />
                     <div>
                       <p className="text-sm text-gray-500">Weight</p>
                       <p className="text-gray-100">{delivery.packageDimensions.weight} kg</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Ruler className="h-4 w-4 text-gray-500" />
+                  <div className="flex items-start gap-3">
+                    {' '}
+                    <Ruler className="mt-1 h-4 w-4 text-gray-500" />
                     <div>
                       <p className="text-sm text-gray-500">Dimensions</p>
                       <p className="text-gray-100">
@@ -228,11 +230,11 @@ export default function RequestDeliveryPage() {
                   <h3 className="text-base font-medium text-gray-100">Primary Address</h3>
                 </div>
                 <div className="space-y-2 text-gray-100">
-                  <p>{delivery.addressLine}</p>
+                  <p>{delivery.billingLocation.address}</p>
                   <p>
-                    {delivery.city}, {delivery.postalCode}
+                    {delivery.billingLocation.city}, {delivery.billingLocation.postalCode}
                   </p>
-                  <p>{delivery.country}</p>
+                  <p>{delivery.billingLocation.country}</p>
                 </div>
               </div>
             </div>

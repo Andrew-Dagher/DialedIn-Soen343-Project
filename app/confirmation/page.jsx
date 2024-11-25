@@ -2,7 +2,15 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ClipboardList, Package, MapPin, Truck, CreditCard, Edit2, DollarSign } from 'lucide-react';
+import {
+  ClipboardList,
+  Package,
+  MapPin,
+  Truck,
+  CreditCard,
+  Edit2,
+  DollarSign
+} from 'lucide-react';
 
 export default function ConfirmationPage() {
   const router = useRouter();
@@ -36,16 +44,18 @@ export default function ConfirmationPage() {
             height: details.height,
           },
           pickup: {
-            country: details.pickupCountry,
             address: details.pickupAddress,
-            zipcode: details.pickupZipcode,
             city: details.pickupCity,
+            country: details.pickupCountry,
+            zipcode: details.pickupZipcode,
+            coordinates: details.pickupCoordinates,
           },
           dropoff: {
-            country: details.dropoffCountry,
             address: details.dropoffAddress,
-            zipcode: details.dropoffZipcode,
             city: details.dropoffCity,
+            country: details.dropoffCountry,
+            zipcode: details.dropoffZipcode,
+            coordinates: details.dropoffCoordinates,
           },
           shippingMethod: details.shippingMethod,
         }),
@@ -53,8 +63,8 @@ export default function ConfirmationPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setQuotationPrice(data.estimatedCost);
-        localStorage.setItem("tempAmount", data.estimatedCost);
+        setQuotationPrice(data.data.estimatedCost);
+        localStorage.setItem("tempAmount", data.data.estimatedCost);
       }
     } catch (error) {
       console.error("Error fetching quotation price:", error);
@@ -87,15 +97,13 @@ export default function ConfirmationPage() {
     );
   }
 
-  const mockData = 125;
-
   return (
     <div className="w-full max-w-4xl mx-auto mt-6 sm:mt-8 md:mt-10 px-4 sm:px-6 md:px-8">
       <div className="flex flex-col gap-6 sm:gap-8">
 
         {/* Details Sections */}
         <div className="rounded-xl border-2 border-gray-800 bg-gray-950 p-4 sm:p-6 md:p-8">
-        <div className="flex flex-col items-center text-center gap-2">
+          <div className="flex flex-col items-center text-center gap-2">
             <ClipboardList className="w-12 h-12 text-violet-400" />
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-100">
               Confirm Your Delivery
@@ -149,8 +157,34 @@ export default function ConfirmationPage() {
               </div>
             </div>
 
-            {/* Locations */}
+            {/* Billing, Pickup, and Dropoff Locations */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Billing Information */}
+              <div className="p-4 rounded-lg bg-gray-900/50">
+                <h3 className="text-lg font-medium text-gray-100 mb-3 flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-violet-400" />
+                  Billing Address
+                </h3>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-sm text-gray-400">Address</p>
+                    <p className="text-base text-gray-100">{deliveryDetails?.billingAddress}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">City</p>
+                    <p className="text-base text-gray-100">{deliveryDetails?.billingCity}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Zipcode</p>
+                    <p className="text-base text-gray-100">{deliveryDetails?.billingZipcode}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Country</p>
+                    <p className="text-base text-gray-100">{deliveryDetails?.billingCountry}</p>
+                  </div>
+                </div>
+              </div>
+
               {/* Pickup Location */}
               <div className="p-4 rounded-lg bg-gray-900/50">
                 <h3 className="text-lg font-medium text-gray-100 mb-3 flex items-center gap-2">
@@ -159,22 +193,20 @@ export default function ConfirmationPage() {
                 </h3>
                 <div className="space-y-2">
                   <div>
-                    <p className="text-sm text-gray-400">Country</p>
-                    <p className="text-base text-gray-100">{deliveryDetails?.pickupCountry}</p>
-                  </div>
-                  <div>
                     <p className="text-sm text-gray-400">Address</p>
                     <p className="text-base text-gray-100">{deliveryDetails?.pickupAddress}</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-400">City</p>
-                      <p className="text-base text-gray-100">{deliveryDetails?.pickupCity}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-400">Zipcode</p>
-                      <p className="text-base text-gray-100">{deliveryDetails?.pickupZipcode}</p>
-                    </div>
+                  <div>
+                    <p className="text-sm text-gray-400">City</p>
+                    <p className="text-base text-gray-100">{deliveryDetails?.pickupCity}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Zipcode</p>
+                    <p className="text-base text-gray-100">{deliveryDetails?.pickupZipcode}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Country</p>
+                    <p className="text-base text-gray-100">{deliveryDetails?.pickupCountry}</p>
                   </div>
                 </div>
               </div>
@@ -187,22 +219,20 @@ export default function ConfirmationPage() {
                 </h3>
                 <div className="space-y-2">
                   <div>
-                    <p className="text-sm text-gray-400">Country</p>
-                    <p className="text-base text-gray-100">{deliveryDetails?.dropoffCountry}</p>
-                  </div>
-                  <div>
                     <p className="text-sm text-gray-400">Address</p>
                     <p className="text-base text-gray-100">{deliveryDetails?.dropoffAddress}</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-400">City</p>
-                      <p className="text-base text-gray-100">{deliveryDetails?.dropoffCity}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-400">Zipcode</p>
-                      <p className="text-base text-gray-100">{deliveryDetails?.dropoffZipcode}</p>
-                    </div>
+                  <div>
+                    <p className="text-sm text-gray-400">City</p>
+                    <p className="text-base text-gray-100">{deliveryDetails?.dropoffCity}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Zipcode</p>
+                    <p className="text-base text-gray-100">{deliveryDetails?.dropoffZipcode}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Country</p>
+                    <p className="text-base text-gray-100">{deliveryDetails?.dropoffCountry}</p>
                   </div>
                 </div>
               </div>
@@ -233,25 +263,26 @@ export default function ConfirmationPage() {
               )}
             </div>
           </div>
+
           {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 mt-4">
-          <button
-            onClick={handleEdit}
-            className="flex-1 flex items-center justify-center gap-2 rounded-xl px-6 py-3 
+          <div className="flex flex-col sm:flex-row gap-4 mt-4">
+            <button
+              onClick={handleEdit}
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl px-6 py-3 
                      bg-yellow-500 hover:bg-yellow-600 text-white font-medium transition-colors"
-          >
-            <Edit2 className="w-5 h-5" />
-            Edit Details
-          </button>
-          <button
-            onClick={handleProceedToPayment}
-            className="flex-1 flex items-center justify-center gap-2 rounded-xl px-6 py-3 
+            >
+              <Edit2 className="w-5 h-5" />
+              Edit Details
+            </button>
+            <button
+              onClick={handleProceedToPayment}
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl px-6 py-3 
                      bg-violet-400 hover:bg-violet-600 text-white font-medium transition-colors"
-          >
-            <CreditCard className="w-5 h-5" />
-            Proceed to Payment
-          </button>
-        </div>
+            >
+              <CreditCard className="w-5 h-5" />
+              Proceed to Payment
+            </button>
+          </div>
         </div>
       </div>
     </div>
