@@ -7,10 +7,10 @@ import { useRouter } from 'next/navigation';
 export default function Page() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    weight: '5',
-    length: '10',
-    width: '10',
-    height: '10',
+    weight: '',
+    length: '',
+    width: '',
+    height: '',
     // Pickup location with new structure
     pickupFormattedAddress: '',
     pickupAddress: '',
@@ -119,7 +119,7 @@ export default function Page() {
       quoteData: quoteData,
       acceptedAt: new Date().toISOString()
     };
-    
+
     // Remove any undefined or null values
     const cleanData = JSON.parse(JSON.stringify(deliveryData));
     const encodedData = encodeURIComponent(JSON.stringify(cleanData));

@@ -3,62 +3,73 @@
 import { NextResponse } from 'next/server';
 import QuotationService from '../../../services/QuotationService';
 
-// Ensure Google Maps API key is available
-if (!process.env.GOOGLE_MAPS_API_KEY) {
-  throw new Error('GOOGLE_MAPS_API_KEY is not set in environment variables');
-}
-
 export async function POST(req) {
   try {
     const body = await req.json();
     const { weight, dimensions, pickup, dropoff, shippingMethod } = body;
 
-    // Validate required fields
+    // Basic validation
     if (!weight || !dimensions || !pickup || !dropoff || !shippingMethod) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Please fill in all required fields' },
         { status: 400 }
       );
     }
 
-    // Validate coordinates presence
+    // Pre-validate dimensions
+    const { SIZE_LIMITS } = QuotationService.PRICING_CONSTANTS;
+    for (const [dimension, value] of Object.entries(dimensions)) {
+      if (!value || isNaN(value)) {
+        return NextResponse.json(
+          { error: `Please enter a valid ${dimension}` },
+          { status: 400 }
+        );
+      }
+      
+      const min = SIZE_LIMITS[`min${dimension.charAt(0).toUpperCase() + dimension.slice(1)}`];
+      const max = SIZE_LIMITS[`max${dimension.charAt(0).toUpperCase() + dimension.slice(1)}`];
+      
+      if (value < min || value > max) {
+        return NextResponse.json(
+          { error: `${dimension} must be between ${min}cm and ${max}cm` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Pre-validate weight
+    const { WEIGHT_LIMITS } = QuotationService.PRICING_CONSTANTS;
+    if (!weight || isNaN(weight)) {
+      return NextResponse.json(
+        { error: 'Please enter a valid weight' },
+        { status: 400 }
+      );
+    }
+    
+    if (weight < WEIGHT_LIMITS.min || weight > WEIGHT_LIMITS.max) {
+      return NextResponse.json(
+        { error: `Weight must be between ${WEIGHT_LIMITS.min}kg and ${WEIGHT_LIMITS.max}kg` },
+        { status: 400 }
+      );
+    }
+
+    // Validate addresses
     if (!pickup.coordinates || !dropoff.coordinates) {
       return NextResponse.json(
-        { error: 'Invalid address coordinates' },
+        { error: 'Please select valid addresses from the suggestions' },
         { status: 400 }
       );
     }
 
-    // Format addresses for the service
-    const formattedPickup = {
-      address: pickup.address,
-      city: pickup.city,
-      zipcode: pickup.zipcode,
-      country: pickup.country,
-      coordinates: pickup.coordinates,
-      formatted_address: pickup.formatted_address
-    };
-
-    const formattedDropoff = {
-      address: dropoff.address,
-      city: dropoff.city,
-      zipcode: dropoff.zipcode,
-      country: dropoff.country,
-      coordinates: dropoff.coordinates,
-      formatted_address: dropoff.formatted_address
-    };
-
-    // Get quote with the formatted addresses
     const quote = await QuotationService.getQuote({
       weight,
       dimensions,
-      pickup: formattedPickup,
-      dropoff: formattedDropoff,
+      pickup,
+      dropoff,
       shippingMethod,
       includeBreakdown: true
     });
 
-    // Return formatted response
     return NextResponse.json({
       success: true,
       data: {
@@ -67,8 +78,8 @@ export async function POST(req) {
         distance: quote.distance,
         estimatedDelivery: quote.estimatedDelivery,
         addresses: {
-          pickup: quote.addresses.pickup || formattedPickup.formatted_address,
-          dropoff: quote.addresses.dropoff || formattedDropoff.formatted_address
+          pickup: quote.addresses.pickup || pickup.formatted_address,
+          dropoff: quote.addresses.dropoff || dropoff.formatted_address
         }
       }
     });
@@ -76,27 +87,11 @@ export async function POST(req) {
   } catch (error) {
     console.error('Quotation error:', error);
     
-    // Provide more specific error messages based on error type
-    let errorMessage = 'Failed to calculate quotation';
-    let statusCode = 400;
-
-    if (error.message.includes('GOOGLE_MAPS_API_KEY')) {
-      errorMessage = 'Service configuration error';
-      statusCode = 500;
-    } else if (error.message.includes('address')) {
-      errorMessage = 'Invalid address format or location not found';
-    } else if (error.message.includes('dimensions')) {
-      errorMessage = 'Invalid package dimensions';
-    } else if (error.message.includes('weight')) {
-      errorMessage = 'Invalid package weight';
-    }
-
     return NextResponse.json(
       { 
-        error: errorMessage,
-        details: error.message 
+        error: error.message.replace('Quotation failed: ', '')
       },
-      { status: statusCode }
+      { status: 400 }
     );
   }
 }
