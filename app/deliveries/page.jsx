@@ -230,11 +230,11 @@ export default function RequestDeliveryPage() {
                   <h3 className="text-base font-medium text-gray-100">Primary Address</h3>
                 </div>
                 <div className="space-y-2 text-gray-100">
-                  <p>{delivery.addressLine}</p>
+                  <p>{delivery.billingLocation.address}</p>
                   <p>
-                    {delivery.city}, {delivery.postalCode}
+                    {delivery.billingLocation.city}, {delivery.billingLocation.postalCode}
                   </p>
-                  <p>{delivery.country}</p>
+                  <p>{delivery.billingLocation.country}</p>
                 </div>
               </div>
             </div>

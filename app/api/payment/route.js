@@ -36,36 +36,56 @@ export async function POST(request) {
     if (payment.status === 'completed') {
       // Save delivery details once payment is successful
       const delivery = new OrderDelivery({
-        requestID,
+        requestID: requestID,
         contactName: deliveryDetails.contactName,
         phoneNumber: deliveryDetails.phoneNumber,
         email: deliveryDetails.email,
-        country: deliveryDetails.country,
-        addressLine: deliveryDetails.addressLine,
-        postalCode: deliveryDetails.postalCode,
-        city: deliveryDetails.city,
+        billingLocation: {
+          address: deliveryDetails.billingAddress,
+          city: deliveryDetails.billingCity,
+          zipcode: deliveryDetails.billingZipcode,
+          country: deliveryDetails.billingCountry,
+          coordinates: {
+            lat: deliveryDetails.billingCoordinates.lat,
+            lng: deliveryDetails.billingCoordinates.lng,
+          },
+          formattedAddress: deliveryDetails.billingFormattedAddress,
+        },
         packageDimensions: {
-          width: deliveryDetails.width,
-          length: deliveryDetails.length,
-          height: deliveryDetails.height,
           weight: deliveryDetails.weight,
+          length: deliveryDetails.length,
+          width: deliveryDetails.width,
+          height: deliveryDetails.height,
         },
         pickupLocation: {
-          country: deliveryDetails.pickupCountry,
           address: deliveryDetails.pickupAddress,
-          zipcode: deliveryDetails.pickupZipcode,
           city: deliveryDetails.pickupCity,
+          zipcode: deliveryDetails.pickupZipcode,
+          country: deliveryDetails.pickupCountry,
+          coordinates: {
+            lat: deliveryDetails.pickupCoordinates.lat,
+            lng: deliveryDetails.pickupCoordinates.lng,
+          },
+          formattedAddress: deliveryDetails.pickupFormattedAddress,
         },
         dropoffLocation: {
-          country: deliveryDetails.dropoffCountry,
           address: deliveryDetails.dropoffAddress,
-          zipcode: deliveryDetails.dropoffZipcode,
           city: deliveryDetails.dropoffCity,
+          zipcode: deliveryDetails.dropoffZipcode,
+          country: deliveryDetails.dropoffCountry,
+          coordinates: {
+            lat: deliveryDetails.dropoffCoordinates.lat,
+            lng: deliveryDetails.dropoffCoordinates.lng,
+          },
+          formattedAddress: deliveryDetails.dropoffFormattedAddress,
         },
         shippingMethod: deliveryDetails.shippingMethod,
         paymentStatus: 'completed',
         userId: deliveryDetails.userId,
       });
+      
+      
+      
 
       const tracking = new Tracking({
         packageId: requestID,
