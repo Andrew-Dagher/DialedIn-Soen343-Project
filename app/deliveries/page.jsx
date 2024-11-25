@@ -72,7 +72,7 @@ export default function RequestDeliveryPage() {
         style: 'border-green-400 bg-green-400/10 text-green-400',
         statusIcon: <CreditCard className="h-4 w-4" />
       },
-      unpaid: {
+      failed: {
         icon: <XCircle className="h-4 w-4" />,
         style: 'border-red-400 bg-red-400/10 text-red-400',
         statusIcon: <CreditCard className="h-4 w-4" />
@@ -88,19 +88,24 @@ export default function RequestDeliveryPage() {
 
   const getDeliveryStatusInfo = status => {
     const statusInfo = {
-      delivered: {
+      "delivered": {
         icon: <Truck className="h-4 w-4" />,
         style: 'border-green-400 bg-green-400/10 text-green-400',
         statusIcon: <CheckCircle2 className="h-4 w-4" />
       },
-      pending: {
+      "pending": {
         icon: <Truck className="h-4 w-4" />,
         style: 'border-blue-400 bg-blue-400/10 text-blue-400',
         statusIcon: <Clock className="h-4 w-4" />
       },
-      processing: {
+      "in transit": {
         icon: <Truck className="h-4 w-4" />,
         style: 'border-violet-400 bg-violet-400/10 text-violet-400',
+        statusIcon: <Clock className="h-4 w-4" />
+      },
+      "canceled": {
+        icon: <Truck className="h-4 w-4" />,
+        style: 'border-red-400 bg-red-400/10 text-red-400',
         statusIcon: <Clock className="h-4 w-4" />
       }
     };
