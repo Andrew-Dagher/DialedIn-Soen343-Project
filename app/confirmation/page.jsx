@@ -1,5 +1,5 @@
 'use client';
-
+import { useUser } from '@auth0/nextjs-auth0/client';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -9,14 +9,21 @@ import {
   Truck,
   CreditCard,
   Edit2,
-  DollarSign
+  DollarSign,
+  Tag,
 } from 'lucide-react';
 
 export default function ConfirmationPage() {
+  const { user, isLoading: isUserLoading } = useUser();
   const router = useRouter();
   const [deliveryDetails, setDeliveryDetails] = useState(null);
   const [quotationPrice, setQuotationPrice] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [userCoupons, setUserCoupons] = useState([]);
+  const [selectedCoupon, setSelectedCoupon] = useState('');
+  const [couponID, setCouponID] = useState('');
+  const [discountApplied, setDiscountApplied] = useState(false);
+  const [discountedPrice, setDiscountedPrice] = useState(null);
 
   useEffect(() => {
     const savedData = localStorage.getItem("requestData");
@@ -30,6 +37,12 @@ export default function ConfirmationPage() {
       router.push('/');
     }
   }, [router]);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserCoupons();
+    }
+  }, [user]);
 
   const fetchQuotationPrice = async (details) => {
     try {
@@ -64,12 +77,57 @@ export default function ConfirmationPage() {
       if (response.ok) {
         const data = await response.json();
         setQuotationPrice(data.data.estimatedCost);
+        setDiscountedPrice(data.data.estimatedCost); // Initially set discounted price to the estimated cost
         localStorage.setItem("tempAmount", data.data.estimatedCost);
       }
     } catch (error) {
       console.error("Error fetching quotation price:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchUserCoupons = async () => {
+    if (!user?.sub) {
+      console.error('User ID is not available');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/get-coupons`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.sub }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUserCoupons(data.coupons);
+      } else {
+        console.error('Failed to fetch coupons:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching coupons:', error);
+    }
+  };
+
+  const applyCoupon = () => {
+    let coupon = null;
+
+    if (selectedCoupon) {
+      coupon = userCoupons.find((c) => c.couponID === selectedCoupon && !c.isUsed);
+    } else if (couponID) {
+      coupon = userCoupons.find((c) => c.couponID === couponID && !c.isUsed);
+    }
+
+    if (coupon) {
+      const discountAmount = quotationPrice * (coupon.discountPercentage / 100);
+      const newPrice = quotationPrice - discountAmount;
+      setDiscountedPrice(newPrice);
+      setDiscountApplied(true);
+      alert('Coupon applied successfully!');
+    } else {
+      alert('Invalid or already used coupon. Please try again.');
     }
   };
 
@@ -80,12 +138,35 @@ export default function ConfirmationPage() {
   };
 
   const handleProceedToPayment = () => {
+    let appliedCouponID = '';
+  
+    if (discountApplied) {
+      // Get the applied coupon ID from either dropdown or input
+      appliedCouponID = selectedCoupon || couponID;
+      if (appliedCouponID) {
+        const usedCoupon = userCoupons.find((c) => c.couponID === appliedCouponID);
+        if (usedCoupon) {
+          usedCoupon.isUsed = true; // Mark it as used in state (local state change)
+        }
+      }
+    }
+  
+    // Store the necessary data in localStorage for payment
     localStorage.setItem("confirmedRequestData", JSON.stringify(deliveryDetails));
-    localStorage.setItem("quotationPrice", JSON.stringify(quotationPrice));
+    localStorage.setItem("quotationPrice", JSON.stringify(discountedPrice));
+    if (appliedCouponID) {
+      localStorage.setItem("appliedCouponID", appliedCouponID); // Store coupon ID if applied
+    } else {
+      localStorage.removeItem("appliedCouponID"); // Remove if no coupon was applied
+    }
+  
+    // Redirect to the payment page
     router.push('/payment');
   };
+  
+  
 
-  if (isLoading) {
+  if (isLoading || isUserLoading) {
     return (
       <div className="w-full max-w-4xl mx-auto mt-6 sm:mt-8 md:mt-10 px-4 sm:px-6 md:px-8">
         <div className="rounded-xl border-2 border-gray-800 bg-gray-950 p-4 sm:p-6 md:p-8">
@@ -96,6 +177,7 @@ export default function ConfirmationPage() {
       </div>
     );
   }
+
 
   return (
     <div className="w-full max-w-4xl mx-auto mt-6 sm:mt-8 md:mt-10 px-4 sm:px-6 md:px-8">
@@ -250,17 +332,55 @@ export default function ConfirmationPage() {
                 </p>
               </div>
 
-              {quotationPrice && (
+              {discountedPrice !== null && (
                 <div className="p-4 rounded-lg bg-gray-900/50">
                   <h3 className="text-lg font-medium text-gray-100 mb-3 flex items-center gap-2">
                     <DollarSign className="w-5 h-5 text-violet-400" />
                     Total Cost
                   </h3>
                   <p className="text-xl font-semibold text-violet-400">
-                    ${quotationPrice}
+                    ${discountedPrice.toFixed(2)}
                   </p>
                 </div>
               )}
+            </div>
+
+            {/* Coupon Section */}
+            <div className="p-4 rounded-lg bg-gray-900/50 mt-6">
+              <h3 className="text-lg font-medium text-gray-100 mb-3 flex items-center gap-2">
+                <Tag className="w-5 h-5 text-violet-400" />
+                Apply Coupon
+              </h3>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <select
+                  value={selectedCoupon}
+                  onChange={(e) => setSelectedCoupon(e.target.value)}
+                  className="w-full rounded-lg p-2.5 border-2 border-gray-800 bg-gray-950 text-gray-100"
+                >
+                  <option value="">Select from My Coupons</option>
+                  {userCoupons
+                    .filter((coupon) => !coupon.isUsed)
+                    .map((coupon) => (
+                      <option key={coupon.couponID} value={coupon.couponID}>
+                        {coupon.couponID} - {coupon.discountPercentage}% Discount
+                      </option>
+                    ))}
+                </select>
+                <input
+                  type="text"
+                  value={couponID}
+                  onChange={(e) => setCouponID(e.target.value)}
+                  placeholder="Enter Coupon ID"
+                  className="w-full rounded-lg p-2.5 border-2 border-gray-800 bg-gray-950 text-gray-100"
+                />
+                <button
+                  onClick={applyCoupon}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl px-6 py-3 
+                        bg-violet-400 hover:bg-violet-600 text-white font-medium transition-colors"
+                >
+                  Apply Coupon
+                </button>
+              </div>
             </div>
           </div>
 
