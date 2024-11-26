@@ -93,7 +93,7 @@ const tabsLoggedIn = [
 
   {
     name: 'Log Out',
-    link: '/api/auth/logout',
+    link: '/logout',
     icon: <User className="h-4 w-4 text-violet-400" />,
     mobileIcon: <LogOut className="h-4 w-4 text-violet-400" />
   }
