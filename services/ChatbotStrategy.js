@@ -1,5 +1,3 @@
-// services/ChatbotStrategy.js
-
 import ollama from 'ollama'; // Assuming ollama is the library used for LLaMA model interaction
 import { handleUserTrackingRequest } from './TrackingService';
 import QuotationService from './QuotationService';
@@ -31,7 +29,7 @@ class ChatbotStrategy {
     }
   }
 
-  async parseStructuredResponse(response) {
+  parseStructuredResponse(response) {
     try {
       const weightMatch = response.match(/Weight:\s*(\d+|\bnull\b)\s*kg/i);
       const dimensionsMatch = response.match(/Dimensions:\s*(\d+|\bnull\b)\s*x\s*(\d+|\bnull\b)\s*x\s*(\d+|\bnull\b)\s*cm/i);
@@ -82,12 +80,22 @@ class ChatbotStrategy {
       If a detail is missing, include "null" in its place.
     `;
 
-    const response = await this.sendToLlamaModel(prompt);
-    return await this.parseStructuredResponse(response);
+    try {
+      const response = await this.sendToLlamaModel(prompt);
+      return this.parseStructuredResponse(response);
+    } catch (error) {
+      console.error('Error extracting details:', error);
+      throw new Error('Failed to extract details.');
+    }
   }
 
   async getQuotation(details) {
-    return await QuotationService.getQuote(details);
+    try {
+      return await QuotationService.getQuote(details);
+    } catch (error) {
+      console.error('Error getting quotation:', error);
+      throw new Error('Failed to get quotation.');
+    }
   }
 }
 
