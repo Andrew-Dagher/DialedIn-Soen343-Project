@@ -1,14 +1,29 @@
 'use client';
-
+import { useUser } from '@auth0/nextjs-auth0/client';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ClipboardList, Package, MapPin, Truck, CreditCard, Edit2, DollarSign } from 'lucide-react';
+import {
+  ClipboardList,
+  Package,
+  MapPin,
+  Truck,
+  CreditCard,
+  Edit2,
+  DollarSign,
+  Tag,
+} from 'lucide-react';
 
 export default function ConfirmationPage() {
+  const { user, isLoading: isUserLoading } = useUser();
   const router = useRouter();
   const [deliveryDetails, setDeliveryDetails] = useState(null);
   const [quotationPrice, setQuotationPrice] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [userCoupons, setUserCoupons] = useState([]);
+  const [selectedCoupon, setSelectedCoupon] = useState('');
+  const [couponID, setCouponID] = useState('');
+  const [discountApplied, setDiscountApplied] = useState(false);
+  const [discountedPrice, setDiscountedPrice] = useState(null);
 
   useEffect(() => {
     const savedData = localStorage.getItem("requestData");
@@ -23,6 +38,12 @@ export default function ConfirmationPage() {
     }
   }, [router]);
 
+  useEffect(() => {
+    if (user) {
+      fetchUserCoupons();
+    }
+  }, [user]);
+
   const fetchQuotationPrice = async (details) => {
     try {
       const response = await fetch('/api/quotation', {
@@ -36,16 +57,18 @@ export default function ConfirmationPage() {
             height: details.height,
           },
           pickup: {
-            country: details.pickupCountry,
             address: details.pickupAddress,
-            zipcode: details.pickupZipcode,
             city: details.pickupCity,
+            country: details.pickupCountry,
+            zipcode: details.pickupZipcode,
+            coordinates: details.pickupCoordinates,
           },
           dropoff: {
-            country: details.dropoffCountry,
             address: details.dropoffAddress,
-            zipcode: details.dropoffZipcode,
             city: details.dropoffCity,
+            country: details.dropoffCountry,
+            zipcode: details.dropoffZipcode,
+            coordinates: details.dropoffCoordinates,
           },
           shippingMethod: details.shippingMethod,
         }),
@@ -53,13 +76,58 @@ export default function ConfirmationPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setQuotationPrice(data.estimatedCost);
-        localStorage.setItem("tempAmount", data.estimatedCost);
+        setQuotationPrice(data.data.estimatedCost);
+        setDiscountedPrice(data.data.estimatedCost); // Initially set discounted price to the estimated cost
+        localStorage.setItem("tempAmount", data.data.estimatedCost);
       }
     } catch (error) {
       console.error("Error fetching quotation price:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchUserCoupons = async () => {
+    if (!user?.sub) {
+      console.error('User ID is not available');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/get-coupons`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.sub }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUserCoupons(data.coupons);
+      } else {
+        console.error('Failed to fetch coupons:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching coupons:', error);
+    }
+  };
+
+  const applyCoupon = () => {
+    let coupon = null;
+
+    if (selectedCoupon) {
+      coupon = userCoupons.find((c) => c.couponID === selectedCoupon && !c.isUsed);
+    } else if (couponID) {
+      coupon = userCoupons.find((c) => c.couponID === couponID && !c.isUsed);
+    }
+
+    if (coupon) {
+      const discountAmount = quotationPrice * (coupon.discountPercentage / 100);
+      const newPrice = quotationPrice - discountAmount;
+      setDiscountedPrice(newPrice);
+      setDiscountApplied(true);
+      alert('Coupon applied successfully!');
+    } else {
+      alert('Invalid or already used coupon. Please try again.');
     }
   };
 
@@ -70,12 +138,35 @@ export default function ConfirmationPage() {
   };
 
   const handleProceedToPayment = () => {
+    let appliedCouponID = '';
+  
+    if (discountApplied) {
+      // Get the applied coupon ID from either dropdown or input
+      appliedCouponID = selectedCoupon || couponID;
+      if (appliedCouponID) {
+        const usedCoupon = userCoupons.find((c) => c.couponID === appliedCouponID);
+        if (usedCoupon) {
+          usedCoupon.isUsed = true; // Mark it as used in state (local state change)
+        }
+      }
+    }
+  
+    // Store the necessary data in localStorage for payment
     localStorage.setItem("confirmedRequestData", JSON.stringify(deliveryDetails));
-    localStorage.setItem("quotationPrice", JSON.stringify(quotationPrice));
+    localStorage.setItem("quotationPrice", JSON.stringify(discountedPrice));
+    if (appliedCouponID) {
+      localStorage.setItem("appliedCouponID", appliedCouponID); // Store coupon ID if applied
+    } else {
+      localStorage.removeItem("appliedCouponID"); // Remove if no coupon was applied
+    }
+  
+    // Redirect to the payment page
     router.push('/payment');
   };
+  
+  
 
-  if (isLoading) {
+  if (isLoading || isUserLoading) {
     return (
       <div className="w-full max-w-4xl mx-auto mt-6 sm:mt-8 md:mt-10 px-4 sm:px-6 md:px-8">
         <div className="rounded-xl border-2 border-gray-800 bg-gray-950 p-4 sm:p-6 md:p-8">
@@ -87,7 +178,6 @@ export default function ConfirmationPage() {
     );
   }
 
-  const mockData = 125;
 
   return (
     <div className="w-full max-w-4xl mx-auto mt-6 sm:mt-8 md:mt-10 px-4 sm:px-6 md:px-8">
@@ -95,7 +185,7 @@ export default function ConfirmationPage() {
 
         {/* Details Sections */}
         <div className="rounded-xl border-2 border-gray-800 bg-gray-950 p-4 sm:p-6 md:p-8">
-        <div className="flex flex-col items-center text-center gap-2">
+          <div className="flex flex-col items-center text-center gap-2">
             <ClipboardList className="w-12 h-12 text-violet-400" />
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-100">
               Confirm Your Delivery
@@ -149,8 +239,34 @@ export default function ConfirmationPage() {
               </div>
             </div>
 
-            {/* Locations */}
+            {/* Billing, Pickup, and Dropoff Locations */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Billing Information */}
+              <div className="p-4 rounded-lg bg-gray-900/50">
+                <h3 className="text-lg font-medium text-gray-100 mb-3 flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-violet-400" />
+                  Billing Address
+                </h3>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-sm text-gray-400">Address</p>
+                    <p className="text-base text-gray-100">{deliveryDetails?.billingAddress}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">City</p>
+                    <p className="text-base text-gray-100">{deliveryDetails?.billingCity}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Zipcode</p>
+                    <p className="text-base text-gray-100">{deliveryDetails?.billingZipcode}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Country</p>
+                    <p className="text-base text-gray-100">{deliveryDetails?.billingCountry}</p>
+                  </div>
+                </div>
+              </div>
+
               {/* Pickup Location */}
               <div className="p-4 rounded-lg bg-gray-900/50">
                 <h3 className="text-lg font-medium text-gray-100 mb-3 flex items-center gap-2">
@@ -159,22 +275,20 @@ export default function ConfirmationPage() {
                 </h3>
                 <div className="space-y-2">
                   <div>
-                    <p className="text-sm text-gray-400">Country</p>
-                    <p className="text-base text-gray-100">{deliveryDetails?.pickupCountry}</p>
-                  </div>
-                  <div>
                     <p className="text-sm text-gray-400">Address</p>
                     <p className="text-base text-gray-100">{deliveryDetails?.pickupAddress}</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-400">City</p>
-                      <p className="text-base text-gray-100">{deliveryDetails?.pickupCity}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-400">Zipcode</p>
-                      <p className="text-base text-gray-100">{deliveryDetails?.pickupZipcode}</p>
-                    </div>
+                  <div>
+                    <p className="text-sm text-gray-400">City</p>
+                    <p className="text-base text-gray-100">{deliveryDetails?.pickupCity}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Zipcode</p>
+                    <p className="text-base text-gray-100">{deliveryDetails?.pickupZipcode}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Country</p>
+                    <p className="text-base text-gray-100">{deliveryDetails?.pickupCountry}</p>
                   </div>
                 </div>
               </div>
@@ -187,22 +301,20 @@ export default function ConfirmationPage() {
                 </h3>
                 <div className="space-y-2">
                   <div>
-                    <p className="text-sm text-gray-400">Country</p>
-                    <p className="text-base text-gray-100">{deliveryDetails?.dropoffCountry}</p>
-                  </div>
-                  <div>
                     <p className="text-sm text-gray-400">Address</p>
                     <p className="text-base text-gray-100">{deliveryDetails?.dropoffAddress}</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-400">City</p>
-                      <p className="text-base text-gray-100">{deliveryDetails?.dropoffCity}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-400">Zipcode</p>
-                      <p className="text-base text-gray-100">{deliveryDetails?.dropoffZipcode}</p>
-                    </div>
+                  <div>
+                    <p className="text-sm text-gray-400">City</p>
+                    <p className="text-base text-gray-100">{deliveryDetails?.dropoffCity}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Zipcode</p>
+                    <p className="text-base text-gray-100">{deliveryDetails?.dropoffZipcode}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Country</p>
+                    <p className="text-base text-gray-100">{deliveryDetails?.dropoffCountry}</p>
                   </div>
                 </div>
               </div>
@@ -220,38 +332,77 @@ export default function ConfirmationPage() {
                 </p>
               </div>
 
-              {quotationPrice && (
+              {discountedPrice !== null && (
                 <div className="p-4 rounded-lg bg-gray-900/50">
                   <h3 className="text-lg font-medium text-gray-100 mb-3 flex items-center gap-2">
                     <DollarSign className="w-5 h-5 text-violet-400" />
                     Total Cost
                   </h3>
                   <p className="text-xl font-semibold text-violet-400">
-                    ${quotationPrice}
+                    ${discountedPrice.toFixed(2)}
                   </p>
                 </div>
               )}
             </div>
+
+            {/* Coupon Section */}
+            <div className="p-4 rounded-lg bg-gray-900/50 mt-6">
+              <h3 className="text-lg font-medium text-gray-100 mb-3 flex items-center gap-2">
+                <Tag className="w-5 h-5 text-violet-400" />
+                Apply Coupon
+              </h3>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <select
+                  value={selectedCoupon}
+                  onChange={(e) => setSelectedCoupon(e.target.value)}
+                  className="w-full rounded-lg p-2.5 border-2 border-gray-800 bg-gray-950 text-gray-100"
+                >
+                  <option value="">Select from My Coupons</option>
+                  {userCoupons
+                    .filter((coupon) => !coupon.isUsed)
+                    .map((coupon) => (
+                      <option key={coupon.couponID} value={coupon.couponID}>
+                        {coupon.couponID} - {coupon.discountPercentage}% Discount
+                      </option>
+                    ))}
+                </select>
+                <input
+                  type="text"
+                  value={couponID}
+                  onChange={(e) => setCouponID(e.target.value)}
+                  placeholder="Enter Coupon ID"
+                  className="w-full rounded-lg p-2.5 border-2 border-gray-800 bg-gray-950 text-gray-100"
+                />
+                <button
+                  onClick={applyCoupon}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl px-6 py-3 
+                        bg-violet-400 hover:bg-violet-600 text-white font-medium transition-colors"
+                >
+                  Apply Coupon
+                </button>
+              </div>
+            </div>
           </div>
+
           {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 mt-4">
-          <button
-            onClick={handleEdit}
-            className="flex-1 flex items-center justify-center gap-2 rounded-xl px-6 py-3 
+          <div className="flex flex-col sm:flex-row gap-4 mt-4">
+            <button
+              onClick={handleEdit}
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl px-6 py-3 
                      bg-yellow-500 hover:bg-yellow-600 text-white font-medium transition-colors"
-          >
-            <Edit2 className="w-5 h-5" />
-            Edit Details
-          </button>
-          <button
-            onClick={handleProceedToPayment}
-            className="flex-1 flex items-center justify-center gap-2 rounded-xl px-6 py-3 
+            >
+              <Edit2 className="w-5 h-5" />
+              Edit Details
+            </button>
+            <button
+              onClick={handleProceedToPayment}
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl px-6 py-3 
                      bg-violet-400 hover:bg-violet-600 text-white font-medium transition-colors"
-          >
-            <CreditCard className="w-5 h-5" />
-            Proceed to Payment
-          </button>
-        </div>
+            >
+              <CreditCard className="w-5 h-5" />
+              Proceed to Payment
+            </button>
+          </div>
         </div>
       </div>
     </div>
