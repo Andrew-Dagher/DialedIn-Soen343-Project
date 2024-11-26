@@ -22,7 +22,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 
-export default function RequestDeliveryPage() {
+export default function DeliveryPage() {
   const { user, isLoading } = useUser();
   const [deliveries, setDeliveries] = useState([]);
   const [isOpen, setIsOpen] = useState(false);

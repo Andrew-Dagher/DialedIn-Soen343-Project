@@ -1,45 +1,95 @@
 'use client';
 
-import { useState } from 'react';
+import { useUser } from '@auth0/nextjs-auth0/client';
+import { useState, useEffect } from 'react';
 
-const ReviewPage = () => {
-  const [review, setReview] = useState('');
+import {
 
-  const handleInputChange = (e) => {
-    setReview(e.target.value);
-  };
+  Loader2,
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Placeholder for submit functionality
-    alert('Submit functionality will be added here.');
-  };
+} from 'lucide-react';
 
-  const inputClassName =
-    'w-full border-gray-800 border-2 rounded-xl bg-transparent p-3 text-sm text-gray-100 placeholder-gray-500 transition-colors focus:border-violet-400 focus:outline-none';
-  const buttonClassName =
-    'rounded-lg bg-violet-400 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-violet-700';
+export default function ReviewPage() {
+  const { user, isLoading } = useUser();
+  const [reviews, setReviews] = useState([]);
+
+
+  useEffect(() => {
+
+    if (user) {
+      const fetchReviews = async () => {
+        const port = window.location.port;
+        const response = await fetch(`http://localhost:${port}/api/view-reviews?userId=${user.sub}`);
+        const data = await response.json();
+        console.log('reviews:', data);
+
+        setReviews(data);
+      
+    }
+    fetchReviews();
+  }
+  }, [user]);
+
+ 
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="flex items-center gap-3 text-violet-400">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span>Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex h-screen items-center justify-center px-4">
+        <div className="rounded-xl border-2 border-gray-800 bg-transparent p-8 text-center">
+          
+          <h2 className="mt-4 text-lg font-medium text-gray-100">Please log in</h2>
+          <p className="mt-2 text-gray-500">Authentication required to view reviews</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="mx-4 sm:mx-6 md:mx-8 mt-6 sm:mt-8 md:mt-10 rounded-xl border-2 border-gray-800 bg-gray-950 p-4 sm:p-6 md:p-8">
-      <div className="mx-auto max-w-7xl">
-        <h1 className="mb-6 sm:mb-8 text-2xl sm:text-3xl font-bold text-gray-100 text-center">
-          Leave a Review
-        </h1>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <textarea
-            placeholder="Write your review here..."
-            value={review}
-            onChange={handleInputChange}
-            className={inputClassName + ' h-32'}
-          />
-          <button type="submit" className={buttonClassName}>
-            Submit Review
-          </button>
-        </form>
+    <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+      <div className="flex items-center gap-2 border-b-2 border-gray-800 pb-2">
+
+        <h2 className="text-lg font-medium text-gray-100">My Reviews</h2>
+      </div>
+
+      <div className="mt-8 flex flex-col gap-8">
+        {reviews.map(review => (
+          <div
+            key={review._id}
+            className="rounded-xl border-2 border-gray-800 bg-transparent p-6 transition-all hover:border-gray-700">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                
+                <div>
+                  <p className="text-sm text-gray-500">Order ID</p>
+                  <p className="text-base font-medium text-gray-100">{review.orderID}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Rating</p>
+                  <p className="text-base font-medium text-gray-100">{review.rating} stars</p>
+                </div>
+                {review.comments &&(
+                <div>
+                  <p className="text-sm text-gray-500">Comments</p>
+                  <p className="text-base font-medium text-gray-100">{review.comments}</p>
+                </div>)}
+              </div>
+              
+            </div>
+           
+          </div>
+        ))}
       </div>
     </div>
   );
-};
-
-export default ReviewPage;
+}

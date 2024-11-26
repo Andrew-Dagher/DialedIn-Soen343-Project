@@ -75,6 +75,12 @@ const tabsLoggedIn = [
   },
 
   {
+    name: 'View your Reviews',
+    link: '/reviews',
+    mobileIcon: <Box className="h-4 w-4 text-violet-400" />
+  },
+
+  {
     name: 'View My Points',
     link: '/view-my-points',
     mobileIcon: <Gift className="h-4 w-4 text-violet-400" />
