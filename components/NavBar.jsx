@@ -27,11 +27,7 @@ const tabs = [
     link: '/request-delivery',
     mobileIcon: <Send className="h-4 w-4 text-violet-400" />
   },
-  {
-    name: 'Add a Review',
-    link: '/Reviews',
-    mobileIcon: <Send className="h-4 w-4 text-violet-400" />
-  },
+  
   {
     name: 'View My Points',
     link: '/view-my-points',
@@ -77,6 +73,7 @@ const tabsLoggedIn = [
     link: '/deliveries',
     mobileIcon: <Box className="h-4 w-4 text-violet-400" />
   },
+
   {
     name: 'View My Points',
     link: '/view-my-points',
@@ -87,11 +84,7 @@ const tabsLoggedIn = [
     link: '/purchase-coupons',
     mobileIcon: <Tag className="h-4 w-4 text-violet-400" />
   },
-  {
-    name: 'Add a Review',
-    link: '/Reviews',
-    mobileIcon: <Send className="h-4 w-4 text-violet-400" />
-  },
+
   {
     name: 'Log Out',
     link: '/api/auth/logout',
