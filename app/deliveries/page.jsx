@@ -190,6 +190,7 @@ export default function DeliveryPage() {
 
       <div className="mt-8 flex flex-col gap-8">
         {deliveries.map(delivery => (
+          
           <div
             key={delivery._id}
             className="rounded-xl border-2 border-gray-800 bg-transparent p-6 transition-all hover:border-gray-700">
@@ -275,13 +276,22 @@ export default function DeliveryPage() {
                   <MapPin className="h-5 w-5 text-violet-400" />
                   <h3 className="text-base font-medium text-gray-100">Primary Address</h3>
                 </div>
-                <div className="space-y-2 text-gray-100">
+               {delivery.billingLocation && ( <div className="space-y-2 text-gray-100">
                   <p>{delivery.billingLocation.address}</p>
                   <p>
                     {delivery.billingLocation.city}, {delivery.billingLocation.postalCode}
                   </p>
                   <p>{delivery.billingLocation.country}</p>
-                </div>
+                  
+                </div>)}
+                {!delivery.billingLocation && (<div className="space-y-2 text-gray-100">
+                  <p>{delivery.addressLine}</p>
+                  <p>
+                    {delivery.city}, {delivery.postalCode}
+                  </p>
+                  <p>{delivery.country}</p>
+                  
+                </div>)}
               </div>
             </div>
 

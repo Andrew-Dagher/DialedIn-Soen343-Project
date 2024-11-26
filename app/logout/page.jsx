@@ -35,7 +35,9 @@ export default function LogoutPage() {
               Cancel
             </button>
             
-            <a href=" ">Signout</a>
+            <a href='/api/auth/logout' className="px-6 py-3 rounded-xl border-2 border-gray-800 
+                       text-white font-medium bg-violet-500 hover:bg-violet-600 
+                       transition-colors text-center no-underline hover:no-underline">Logout</a>
           </div>
         </div>
       </div>
