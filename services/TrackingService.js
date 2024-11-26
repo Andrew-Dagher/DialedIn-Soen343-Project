@@ -66,64 +66,58 @@ const deliveryStages = [
   },
 ];
 
-
-
 async function updateTrackingPhase(packageId) {
   try {
     const trackingData = await Tracking.findOne({ packageId });
+
     if (!trackingData) {
       console.error('Tracking data not found for packageId:', packageId);
-      return { error: 'Tracking data not found' };
+      return { error: 'Tracking data not found' }; 
     }
 
     const currentProgress = trackingData.locationDetails?.progress || 0;
     const currentIndex = deliveryStages.findIndex(stage => stage.progress === currentProgress);
+
     if (currentIndex === -1) {
       console.error('Invalid progress state:', currentProgress);
       return { error: 'Invalid progress state' };
     }
 
     if (currentIndex >= deliveryStages.length - 1) {
-      // Package already delivered, no further updates beyond 100%
       trackingData.locationDetails = deliveryStages[deliveryStages.length - 1];
-      trackingData.deliveryProgress = 100; // Ensure it is set to 100%
+      trackingData.deliveryProgress = 100;
       console.log(`Package ${packageId} already delivered.`);
-      // No notification is sent since it is already at the final stage
     } else {
-      // Move to the next stage
       const nextStage = deliveryStages[currentIndex + 1];
       trackingData.locationDetails = nextStage;
       trackingData.deliveryProgress = nextStage.progress;
       console.log(`Package ${packageId} updated to progress: ${nextStage.progress}%`);
-
-      // Send email notification for progress change, including reaching 100%
       trackingSubject.notify(trackingData);
     }
 
-    // Save the updated tracking data to the database
     await trackingData.save();
-
     return trackingData;
   } catch (error) {
     console.error('Error updating tracking phase:', error);
-    throw error;
+    return { error: error.message || 'Failed to update tracking data' }; 
   }
 }
+
 
 
 
 async function handleUserTrackingRequest(packageId) {
-  try {
-    const updatedTrackingData = await updateTrackingPhase(packageId);
-    if (updatedTrackingData.error) {
-      return { message: updatedTrackingData.error, status: 'error' };
-    }
-    console.log('Tracking data updated for packageId:', packageId);
-    return updatedTrackingData;
-  } catch (error) {
-    console.error('Error handling tracking request:', error);
-    return { error: 'Failed to update tracking data' };
+  const updatedTrackingData = await updateTrackingPhase(packageId);
+
+  // Check if an error occurred
+  if (updatedTrackingData.error) {
+    console.warn('Error during tracking update:', updatedTrackingData.error);
+    return { error: updatedTrackingData.error, status: 'error' }; 
   }
+
+  console.log('Tracking data updated for packageId:', packageId);
+  return updatedTrackingData;
 }
+
 
 export { handleUserTrackingRequest };

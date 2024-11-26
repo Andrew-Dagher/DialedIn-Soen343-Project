@@ -1,10 +1,29 @@
-import React from 'react';
+// components/QuotationForm.jsx
+'use client';
+
 import { Package, MapPin, Truck } from 'lucide-react';
+import AddressAutocomplete from './AddressAutocomplete';
 
 export default function QuotationForm({ formData, setFormData, handleSubmit, isSubmitting }) {
   const handleChange = e => {
     const { name, value } = e.target;
     setFormData(prevData => ({ ...prevData, [name]: value }));
+  };
+
+  const handleAddressChange = (type) => (e) => {
+    const addressData = e.target.value;
+    setFormData(prevData => ({
+      ...prevData,
+      [`${type}Address`]: addressData.address,
+      [`${type}City`]: addressData.city,
+      [`${type}Country`]: addressData.country,
+      [`${type}Zipcode`]: addressData.zipcode,
+      [`${type}Coordinates`]: {
+        lat: addressData.lat,
+        lng: addressData.lng
+      },
+      [`${type}FormattedAddress`]: addressData.formatted_address
+    }));
   };
 
   const inputClassName = `
@@ -71,46 +90,12 @@ export default function QuotationForm({ formData, setFormData, handleSubmit, isS
             <MapPin className="w-5 h-5 text-violet-400" />
             <h2 className="text-lg font-medium text-gray-100">Pickup Location</h2>
           </div>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <input
-                type="text"
-                name="pickupCountry"
-                placeholder="Country"
-                value={formData.pickupCountry}
-                onChange={handleChange}
-                required
-                className={inputClassName}
-              />
-              <input
-                type="text"
-                name="pickupCity"
-                placeholder="City"
-                value={formData.pickupCity}
-                onChange={handleChange}
-                required
-                className={inputClassName}
-              />
-            </div>
-            <input
-              type="text"
-              name="pickupAddress"
-              placeholder="Address"
-              value={formData.pickupAddress}
-              onChange={handleChange}
-              required
-              className={inputClassName}
-            />
-            <input
-              type="text"
-              name="pickupZipcode"
-              placeholder="Zipcode"
-              value={formData.pickupZipcode}
-              onChange={handleChange}
-              required
-              className={inputClassName}
-            />
-          </div>
+          <AddressAutocomplete
+            value={formData.pickupFormattedAddress}
+            onChange={handleAddressChange('pickup')}
+            placeholder="Enter pickup address"
+            required
+          />
         </div>
 
         {/* Drop-off Location */}
@@ -119,50 +104,14 @@ export default function QuotationForm({ formData, setFormData, handleSubmit, isS
             <MapPin className="w-5 h-5 text-violet-400" />
             <h2 className="text-lg font-medium text-gray-100">Drop-off Location</h2>
           </div>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <input
-                type="text"
-                name="dropoffCountry"
-                placeholder="Country"
-                value={formData.dropoffCountry}
-                onChange={handleChange}
-                required
-                className={inputClassName}
-              />
-              <input
-                type="text"
-                name="dropoffCity"
-                placeholder="City"
-                value={formData.dropoffCity}
-                onChange={handleChange}
-                required
-                className={inputClassName}
-              />
-            </div>
-            <input
-              type="text"
-              name="dropoffAddress"
-              placeholder="Address"
-              value={formData.dropoffAddress}
-              onChange={handleChange}
-              required
-              className={inputClassName}
-            />
-            <input
-              type="text"
-              name="dropoffZipcode"
-              placeholder="Zipcode"
-              value={formData.dropoffZipcode}
-              onChange={handleChange}
-              required
-              className={inputClassName}
-            />
-          </div>
+          <AddressAutocomplete
+            value={formData.dropoffFormattedAddress}
+            onChange={handleAddressChange('dropoff')}
+            placeholder="Enter delivery address"
+            required
+          />
         </div>
       </div>
-
-      {/* Shipping Method */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 pb-2 border-b-2 border-gray-800">
           <Truck className="w-5 h-5 text-violet-400" />

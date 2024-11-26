@@ -113,7 +113,7 @@ export default function RequestDeliveryPage() {
         style: 'border-green-400 bg-green-400/10 text-green-400',
         statusIcon: <CreditCard className="h-4 w-4" />
       },
-      unpaid: {
+      failed: {
         icon: <XCircle className="h-4 w-4" />,
         style: 'border-red-400 bg-red-400/10 text-red-400',
         statusIcon: <CreditCard className="h-4 w-4" />
@@ -129,19 +129,24 @@ export default function RequestDeliveryPage() {
 
   const getDeliveryStatusInfo = status => {
     const statusInfo = {
-      delivered: {
+      "delivered": {
         icon: <Truck className="h-4 w-4" />,
         style: 'border-green-400 bg-green-400/10 text-green-400',
         statusIcon: <CheckCircle2 className="h-4 w-4" />
       },
-      pending: {
+      "pending": {
         icon: <Truck className="h-4 w-4" />,
         style: 'border-blue-400 bg-blue-400/10 text-blue-400',
         statusIcon: <Clock className="h-4 w-4" />
       },
-      processing: {
+      "in transit": {
         icon: <Truck className="h-4 w-4" />,
         style: 'border-violet-400 bg-violet-400/10 text-violet-400',
+        statusIcon: <Clock className="h-4 w-4" />
+      },
+      "canceled": {
+        icon: <Truck className="h-4 w-4" />,
+        style: 'border-red-400 bg-red-400/10 text-red-400',
         statusIcon: <Clock className="h-4 w-4" />
       }
     };
@@ -242,15 +247,17 @@ export default function RequestDeliveryPage() {
                   <h3 className="text-base font-medium text-gray-100">Package Details</h3>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3">
-                    <Scale className="h-4 w-4 text-gray-500" />
+                  <div className="flex items-start gap-3">
+                    {' '}
+                    <Scale className="mt-1 h-4 w-4 text-gray-500" />
                     <div>
                       <p className="text-sm text-gray-500">Weight</p>
                       <p className="text-gray-100">{delivery.packageDimensions.weight} kg</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Ruler className="h-4 w-4 text-gray-500" />
+                  <div className="flex items-start gap-3">
+                    {' '}
+                    <Ruler className="mt-1 h-4 w-4 text-gray-500" />
                     <div>
                       <p className="text-sm text-gray-500">Dimensions</p>
                       <p className="text-gray-100">
@@ -269,11 +276,11 @@ export default function RequestDeliveryPage() {
                   <h3 className="text-base font-medium text-gray-100">Primary Address</h3>
                 </div>
                 <div className="space-y-2 text-gray-100">
-                  <p>{delivery.addressLine}</p>
+                  <p>{delivery.billingLocation.address}</p>
                   <p>
-                    {delivery.city}, {delivery.postalCode}
+                    {delivery.billingLocation.city}, {delivery.billingLocation.postalCode}
                   </p>
-                  <p>{delivery.country}</p>
+                  <p>{delivery.billingLocation.country}</p>
                 </div>
               </div>
             </div>

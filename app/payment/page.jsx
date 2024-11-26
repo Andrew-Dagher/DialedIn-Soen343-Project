@@ -20,21 +20,27 @@ const PaymentPage = () => {
   const [totalPayment, setTotalPayment] = useState(null);
   const [requestId, setRequestId] = useState(null);
   const [deliveryDetails, setDeliveryDetails] = useState(null);
+  const [couponID, setCouponID] = useState(null);
 
   useEffect(() => {
     const storedRequestId = localStorage.getItem('tempRequestID');
     const storedAmount = localStorage.getItem('quotationPrice');
     const storedDeliveryDetails = JSON.parse(localStorage.getItem('requestData')); // Retrieve delivery details
-
+    const storedCouponID = localStorage.getItem('appliedCouponID'); // Retrieve coupon ID if available
+  
     if (storedRequestId && storedAmount && storedDeliveryDetails) {
       setTotalPayment(parseFloat(storedAmount));
       setRequestId(storedRequestId);
       setDeliveryDetails(storedDeliveryDetails);
+      if (storedCouponID) {
+        setCouponID(storedCouponID); // Store coupon ID in state if it exists
+      }
     } else {
       console.error('No request ID, amount, or delivery details found');
       setError('No request ID, amount, or delivery details found');
     }
   }, []);
+  
 
   const validateCardNumber = number => number.length === 16 && /^\d+$/.test(number);
   const validateExpiryDate = date => /^(0[1-9]|1[0-2])\/\d{2}$/.test(date);
@@ -77,6 +83,7 @@ const PaymentPage = () => {
           paymentMethod: paymentMethod
         },
         deliveryDetails, // Send all delivery details
+        couponID,
         amount: totalPayment
       });
 

@@ -9,78 +9,101 @@ export async function POST(req) {
         contactName,
         phoneNumber,
         email,
-        country,
-        addressLine,
-        postalCode,
-        city,
-        width,
-        length,
-        height,
+        billingAddress,
+        billingCity,
+        billingZipcode,
+        billingCountry,
+        billingCoordinates,
         weight,
-        pickupCountry,
+        length,
+        width,
+        height,
         pickupAddress,
-        pickupZipcode,
         pickupCity,
-        dropoffCountry,
+        pickupZipcode,
+        pickupCountry,
+        pickupCoordinates,
+        pickupFormattedAddress,
         dropoffAddress,
-        dropoffZipcode,
         dropoffCity,
+        dropoffZipcode,
+        dropoffCountry,
+        dropoffCoordinates,
+        dropoffFormattedAddress,
         shippingMethod,
         userId
     } = await req.json();
+
+    const billing = {
+        address: billingAddress,
+        city: billingCity,
+        zipcode: billingZipcode,
+        country: billingCountry,
+        coordinates: billingCoordinates
+    };
+
+    const pickup = {
+        address: pickupAddress,
+        city: pickupCity,
+        zipcode: pickupZipcode,
+        country: pickupCountry,
+        coordinates: pickupCoordinates,
+        formatted_address: pickupFormattedAddress
+    };
+
+    const dropoff = {
+        address: dropoffAddress,
+        city: dropoffCity,
+        zipcode: dropoffZipcode,
+        country: dropoffCountry,
+        coordinates: dropoffCoordinates,
+        formatted_address: dropoffFormattedAddress
+    };
+
+    const dimensions = {
+        length,
+        width,
+        height
+    };
 
     // Validate that all required fields are provided
     if (
         !contactName ||
         !phoneNumber ||
         !email ||
-        !country ||
-        !addressLine ||
-        !postalCode ||
-        !city ||
-        !width ||
-        !length ||
-        !height ||
+        !billing ||
+        !pickup ||
+        !dropoff ||
         !weight ||
-        !pickupCountry ||
-        !pickupAddress ||
-        !pickupZipcode ||
-        !pickupCity ||
-        !dropoffCountry ||
-        !dropoffAddress ||
-        !dropoffZipcode ||
-        !dropoffCity ||
+        !dimensions ||
         !shippingMethod
     ) {
         return new Response(JSON.stringify({ message: "All fields are required" }), { status: 400 });
     }
 
+    // Validate coordinates presence
+    if (!pickup.coordinates || !dropoff.coordinates || !billing.coordinates) {
+        return new Response(JSON.stringify({ message: "Invalid address coordinates" }), { status: 400 });
+    }
+
     // Create a temporary request ID
-    const requestId = nanoid();
-    temporaryRequests[requestId] = {
+    const requestID = nanoid(); // Rename to be consistent
+
+    // Store request data in a nested structure
+    temporaryRequests[requestID] = {
+        requestID,
         contactName,
         phoneNumber,
         email,
-        country,
-        addressLine,
-        postalCode,
-        city,
-        width,
-        length,
-        height,
+        billing,
+        pickup,
+        dropoff,
         weight,
-        pickupCountry,
-        pickupAddress,
-        pickupZipcode,
-        pickupCity,
-        dropoffCountry,
-        dropoffAddress,
-        dropoffZipcode,
-        dropoffCity,
+        dimensions,
         shippingMethod,
         status: "pending", // Payment status set to pending until paid
         userId
     };
 
-    return new Response(JSON.stringify({ message: "Temporary delivery request created", requestId }), { status: 200 });
+    return new Response(JSON.stringify({ message: "Temporary delivery request created", requestID }), { status: 200 });
 }

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, User, Home, Package, DollarSign, Send, Box, LogOut } from 'lucide-react';
+import { Menu, X, User, Home, Package, DollarSign, Send, Box, LogOut, Gift, Tag } from 'lucide-react';
 import { useUser } from '@auth0/nextjs-auth0/client';
 
 const tabs = [
@@ -29,12 +29,23 @@ const tabs = [
   },
   
   {
+    name: 'View My Points',
+    link: '/view-my-points',
+    mobileIcon: <Gift className="h-4 w-4 text-violet-400" />
+  },
+  {
+    name: 'Purchase Coupons',
+    link: '/purchase-coupons',
+    mobileIcon: <Tag className="h-4 w-4 text-violet-400" />
+  },
+  {
     name: 'Login',
     link: '/api/auth/login',
     icon: <User className="h-4 w-4 text-violet-400" />,
     mobileIcon: <User className="h-4 w-4 text-violet-400" />
   }
 ];
+
 
 const tabsLoggedIn = [
   {
@@ -62,7 +73,18 @@ const tabsLoggedIn = [
     link: '/deliveries',
     mobileIcon: <Box className="h-4 w-4 text-violet-400" />
   },
-  
+
+  {
+    name: 'View My Points',
+    link: '/view-my-points',
+    mobileIcon: <Gift className="h-4 w-4 text-violet-400" />
+  },
+  {
+    name: 'Purchase Coupons',
+    link: '/purchase-coupons',
+    mobileIcon: <Tag className="h-4 w-4 text-violet-400" />
+  },
+
   {
     name: 'Log Out',
     link: '/api/auth/logout',
@@ -70,6 +92,7 @@ const tabsLoggedIn = [
     mobileIcon: <LogOut className="h-4 w-4 text-violet-400" />
   }
 ];
+
 
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);

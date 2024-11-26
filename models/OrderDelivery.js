@@ -20,27 +20,44 @@ const OrderDeliverySchema = new Schema({
     type: String,
     required: true,
   },
-  country: String,
-  addressLine: String,
-  postalCode: String,
-  city: String,
-  packageDimensions: {
-    width: Number,
-    length: Number,
-    height: Number,
-    weight: Number,
+  billingLocation: {
+    address: { type: String },
+    city: { type: String },
+    zipcode: { type: String },
+    country: { type: String },
+    coordinates: {
+      lat: { type: Number },
+      lng: { type: Number },
+    },
+    formattedAddress: { type: String },
   },
   pickupLocation: {
-    country: String,
-    address: String,
-    zipcode: String,
-    city: String,
+    address: { type: String },
+    city: { type: String },
+    zipcode: { type: String },
+    country: { type: String },
+    coordinates: {
+      lat: { type: Number },
+      lng: { type: Number },
+    },
+    formattedAddress: { type: String },
   },
   dropoffLocation: {
-    country: String,
-    address: String,
-    zipcode: String,
-    city: String,
+    address: { type: String },
+    city: { type: String },
+    zipcode: { type: String },
+    country: { type: String },
+    coordinates: {
+      lat: { type: Number },
+      lng: { type: Number },
+    },
+    formattedAddress: { type: String },
+  },
+  packageDimensions: {
+    weight: { type: String },
+    length: { type: String },
+    width: { type: String },
+    height: { type: String },
   },
   shippingMethod: {
     type: String,
@@ -61,11 +78,10 @@ const OrderDeliverySchema = new Schema({
     type: Date,
     default: Date.now,
   },
-  userId:{
+  userId: {
     type: String,
     default: '0',
-  }
+  },
 });
 
-// Check if the model is already compiled to prevent OverwriteModelError
 module.exports = mongoose.models.OrderDelivery || mongoose.model('OrderDelivery', OrderDeliverySchema);

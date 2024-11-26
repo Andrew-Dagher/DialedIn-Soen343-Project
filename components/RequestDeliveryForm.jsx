@@ -3,19 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import DeliveryRequestService from '../services/DeliveryRequestService';
+import AddressAutocomplete from './AddressAutocomplete';
 import { useUser } from '@auth0/nextjs-auth0/client';
 import {
   User,
   Phone,
   Mail,
-  Globe,
-  MapPin,
-  Building,
   Package,
   Box,
   Truck,
-  Scale,
-  Home,
   ArrowRight,
   ArrowLeft,
   Send
@@ -30,63 +26,151 @@ const RequestDeliveryForm = () => {
     contactName: '',
     phoneNumber: '',
     email: '',
-    country: '',
-    addressLine: '',
-    postalCode: '',
-    city: '',
-    width: '',
-    length: '',
-    height: '',
+    billingAddress: '',
+    billingCity: '',
+    billingZipcode: '',
+    billingCountry: '',
+    billingCoordinates: { lat: null, lng: null },
     weight: '',
-    pickupCountry: '',
+    length: '',
+    width: '',
+    height: '',
     pickupAddress: '',
-    pickupZipcode: '',
     pickupCity: '',
-    dropoffCountry: '',
+    pickupZipcode: '',
+    pickupCountry: '',
+    pickupCoordinates: { lat: null, lng: null },
+    pickupFormattedAddress: '',
     dropoffAddress: '',
-    dropoffZipcode: '',
     dropoffCity: '',
+    dropoffZipcode: '',
+    dropoffCountry: '',
+    dropoffCoordinates: { lat: null, lng: null },
+    dropoffFormattedAddress: '',
     shippingMethod: '',
-    userId: user?.sub
+    userId: user?.sub,
   });
+
+  // Add the pricing constants to the top of RequestDeliveryForm
+const PRICING_CONSTANTS = {
+  SIZE_LIMITS: {
+    minLength: 10,
+    maxLength: 200,
+    minWidth: 10,
+    maxWidth: 200,
+    minHeight: 10,
+    maxHeight: 200
+  },
+  WEIGHT_LIMITS: {
+    min: 0.1,
+    max: 100
+  }
+};
+
+
   const [completedSteps, setCompletedSteps] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const data = searchParams.get('data');
     if (data) {
-      setFormData(JSON.parse(decodeURIComponent(data)));
+      const parsedData = JSON.parse(decodeURIComponent(data));
+
+      setFormData((prevData) => ({
+        ...prevData,
+        ...parsedData,
+        userId: user?.sub,
+      }));
     }
   }, [searchParams]);
 
+  const handleAddressChange = (type) => (e) => {
+    const addressData = e.target.value;
+    setFormData(prevData => ({
+      ...prevData,
+      [`${type}Address`]: addressData.address,
+      [`${type}City`]: addressData.city,
+      [`${type}Country`]: addressData.country,
+      [`${type}Zipcode`]: addressData.zipcode,
+      [`${type}Coordinates`]: {
+        lat: addressData.lat,
+        lng: addressData.lng
+      },
+      [`${type}FormattedAddress`]: addressData.formatted_address
+    }));
+  };
+
   const handleChange = (field, value) => {
-    setFormData({ ...formData, [field]: value, userId: user?.sub  });
+    setFormData((prevData) => ({
+      ...prevData,
+      [field]: value,
+      userId: user?.sub,
+    }));
   };
 
   const validateStep = () => {
     switch (currentStep) {
       case 1:
+        // Billing validation with email and phone format checks
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const phoneRegex = /^[0-9]{10,15}$/; // Adjust regex to match desired phone number format
+  
         return (
           formData.contactName &&
-          formData.phoneNumber &&
-          formData.email &&
-          formData.country &&
-          formData.addressLine &&
-          formData.postalCode &&
-          formData.city
+          phoneRegex.test(formData.phoneNumber) &&
+          emailRegex.test(formData.email) &&
+          formData.billingFormattedAddress
         );
+  
       case 2:
-        return formData.width && formData.length && formData.height && formData.weight;
+      // Validate dimensions and weight with min/max checks
+      const { minLength, maxLength, minWidth, maxWidth, minHeight, maxHeight } = PRICING_CONSTANTS.SIZE_LIMITS;
+      const { min: minWeight, max: maxWeight } = PRICING_CONSTANTS.WEIGHT_LIMITS;
+
+      if (!formData.weight || formData.weight < minWeight || formData.weight > maxWeight) {
+        alert(`Weight must be between ${minWeight}kg and ${maxWeight}kg.`);
+        return false;
+      }
+
+      if (!formData.length || formData.length < minLength || formData.length > maxLength) {
+        alert(`Length must be between ${minLength}cm and ${maxLength}cm.`);
+        return false;
+      }
+
+      if (!formData.width || formData.width < minWidth || formData.width > maxWidth) {
+        alert(`Width must be between ${minWidth}cm and ${maxWidth}cm.`);
+        return false;
+      }
+
+      if (!formData.height || formData.height < minHeight || formData.height > maxHeight) {
+        alert(`Height must be between ${minHeight}cm and ${maxHeight}cm.`);
+        return false;
+      }
+
+      return true;
+
+  
       case 3:
-        return formData.pickupCountry && formData.pickupAddress && formData.pickupZipcode && formData.pickupCity;
+        return formData.pickupFormattedAddress;
+  
       case 4:
-        return formData.dropoffCountry && formData.dropoffAddress && formData.dropoffZipcode && formData.dropoffCity;
+        // Drop-off validation with check to ensure pickup and dropoff are not the same
+        if (formData.dropoffFormattedAddress === formData.pickupFormattedAddress) {
+          alert('Pickup and dropoff locations cannot be the same. Please enter different addresses.');
+          return false;
+        }
+  
+        return formData.dropoffFormattedAddress;
+  
       case 5:
         return formData.shippingMethod;
+  
       default:
         return true;
     }
   };
+  
+  
 
   const nextStep = () => {
     if (validateStep()) {
@@ -99,13 +183,13 @@ const RequestDeliveryForm = () => {
 
   const prevStep = () => setCurrentStep(currentStep - 1);
 
-  const handleSubmit = async event => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setIsSubmitting(true);
     try {
       const deliveryService = DeliveryRequestService.getInstance();
       const response = await deliveryService.createTemporaryDeliveryRequest(formData);
-      localStorage.setItem('tempRequestID', response.requestId);
+      localStorage.setItem('tempRequestID', response.requestID);
       localStorage.setItem('requestData', JSON.stringify(formData));
       router.push('/confirmation');
     } catch (error) {
@@ -116,7 +200,13 @@ const RequestDeliveryForm = () => {
     }
   };
 
-  const steps = ['Shipping', 'Package dimensions', 'Pickup location', 'Drop-off location', 'Shipping method'];
+  const steps = [
+    'Billing Information',
+    'Package dimensions',
+    'Pickup location',
+    'Drop-off location',
+    'Shipping method'
+  ];
 
   const inputBaseClassName = `
     w-full pl-10 pr-4 py-2.5 rounded-xl bg-gray-900/50 
@@ -148,8 +238,8 @@ const RequestDeliveryForm = () => {
                     currentStep === index + 1
                       ? 'bg-violet-400 text-white'
                       : completedSteps[index + 1]
-                        ? 'border-2 border-violet-400 bg-violet-400/20 text-violet-400'
-                        : 'bg-gray-800 text-gray-400'
+                      ? 'border-2 border-violet-400 bg-violet-400/20 text-violet-400'
+                      : 'bg-gray-800 text-gray-400'
                   } transition-colors`}>
                   {completedSteps[index + 1] ? '✓' : index + 1}
                 </div>
@@ -164,8 +254,8 @@ const RequestDeliveryForm = () => {
                   currentStep === index + 1
                     ? 'text-violet-400'
                     : completedSteps[index + 1]
-                      ? 'text-violet-400'
-                      : 'text-gray-500'
+                    ? 'text-violet-400'
+                    : 'text-gray-500'
                 }`}>
                 {step}
               </span>
@@ -176,14 +266,14 @@ const RequestDeliveryForm = () => {
 
       {/* Form Content */}
       <div className="divide-y divide-gray-800/50">
-        {/* Step 1: Shipping Information */}
+        {/* Step 1: Billing Information */}
         {currentStep === 1 && (
           <div className="p-6">
             <div className="mb-4 flex items-center gap-3">
               <div className="rounded-lg bg-violet-500/10 p-2">
                 <User className="h-5 w-5 text-violet-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-100">Shipping Information</h3>
+              <h3 className="text-lg font-medium text-gray-100">Billing Information</h3>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -196,7 +286,7 @@ const RequestDeliveryForm = () => {
                   placeholder="Contact Name"
                   className={inputBaseClassName}
                   value={formData.contactName}
-                  onChange={e => handleChange('contactName', e.target.value)}
+                  onChange={(e) => handleChange('contactName', e.target.value)}
                 />
               </div>
 
@@ -209,7 +299,7 @@ const RequestDeliveryForm = () => {
                   placeholder="Phone Number"
                   className={inputBaseClassName}
                   value={formData.phoneNumber}
-                  onChange={e => handleChange('phoneNumber', e.target.value)}
+                  onChange={(e) => handleChange('phoneNumber', e.target.value)}
                 />
               </div>
 
@@ -222,61 +312,16 @@ const RequestDeliveryForm = () => {
                   placeholder="Email Address"
                   className={inputBaseClassName}
                   value={formData.email}
-                  onChange={e => handleChange('email', e.target.value)}
+                  onChange={(e) => handleChange('email', e.target.value)}
                 />
               </div>
 
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <Globe className="h-4 w-4 text-gray-500" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Country"
-                  className={inputBaseClassName}
-                  value={formData.country}
-                  onChange={e => handleChange('country', e.target.value)}
-                />
-              </div>
-
-              <div className="relative sm:col-span-2">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <MapPin className="h-4 w-4 text-gray-500" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Street Address"
-                  className={inputBaseClassName}
-                  value={formData.addressLine}
-                  onChange={e => handleChange('addressLine', e.target.value)}
-                />
-              </div>
-
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <Building className="h-4 w-4 text-gray-500" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="City"
-                  className={inputBaseClassName}
-                  value={formData.city}
-                  onChange={e => handleChange('city', e.target.value)}
-                />
-              </div>
-
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <Home className="h-4 w-4 text-gray-500" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Postal Code"
-                  className={inputBaseClassName}
-                  value={formData.postalCode}
-                  onChange={e => handleChange('postalCode', e.target.value)}
-                />
-              </div>
+              <AddressAutocomplete
+                value={formData.billingFormattedAddress}
+                onChange={handleAddressChange('billing')}
+                placeholder={formData.billingFormattedAddress || 'Enter billing address'}
+                required
+              />
             </div>
           </div>
         )}
@@ -292,57 +337,34 @@ const RequestDeliveryForm = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <Box className="h-4 w-4 text-gray-500" />
-                </div>
-                <input
-                  type="number"
-                  placeholder="Width (cm)"
-                  className={inputBaseClassName}
-                  value={formData.width}
-                  onChange={e => handleChange('width', e.target.value)}
-                />
-              </div>
-
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <Box className="h-4 w-4 text-gray-500" />
-                </div>
-                <input
-                  type="number"
-                  placeholder="Length (cm)"
-                  className={inputBaseClassName}
-                  value={formData.length}
-                  onChange={e => handleChange('length', e.target.value)}
-                />
-              </div>
-
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <Box className="h-4 w-4 text-gray-500" />
-                </div>
-                <input
-                  type="number"
-                  placeholder="Height (cm)"
-                  className={inputBaseClassName}
-                  value={formData.height}
-                  onChange={e => handleChange('height', e.target.value)}
-                />
-              </div>
-
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <Scale className="h-4 w-4 text-gray-500" />
-                </div>
-                <input
-                  type="number"
-                  placeholder="Weight (kg)"
-                  className={inputBaseClassName}
-                  value={formData.weight}
-                  onChange={e => handleChange('weight', e.target.value)}
-                />
-              </div>
+            <input
+                type="number"
+                placeholder="Weight (kg)"
+                className={inputBaseClassName}
+                value={formData.weight}
+                onChange={(e) => handleChange('weight', e.target.value)}
+              />
+              <input
+                type="number"
+                placeholder="Length (cm)"
+                className={inputBaseClassName}
+                value={formData.length}
+                onChange={(e) => handleChange('length', e.target.value)}
+              />
+              <input
+                type="number"
+                placeholder="Width (cm)"
+                className={inputBaseClassName}
+                value={formData.width}
+                onChange={(e) => handleChange('width', e.target.value)}
+              />
+              <input
+                type="number"
+                placeholder="Height (cm)"
+                className={inputBaseClassName}
+                value={formData.height}
+                onChange={(e) => handleChange('height', e.target.value)}
+              />
             </div>
           </div>
         )}
@@ -352,64 +374,17 @@ const RequestDeliveryForm = () => {
           <div className="p-6">
             <div className="mb-4 flex items-center gap-3">
               <div className="rounded-lg bg-violet-500/10 p-2">
-                <MapPin className="h-5 w-5 text-violet-400" />
+                <Box className="h-5 w-5 text-violet-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-100">Pickup Location</h3>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <Globe className="h-4 w-4 text-gray-500" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Country"
-                  className={inputBaseClassName}
-                  value={formData.pickupCountry}
-                  onChange={e => handleChange('pickupCountry', e.target.value)}
-                />
-              </div>
-
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <Building className="h-4 w-4 text-gray-500" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="City"
-                  className={inputBaseClassName}
-                  value={formData.pickupCity}
-                  onChange={e => handleChange('pickupCity', e.target.value)}
-                />
-              </div>
-
-              <div className="relative sm:col-span-2">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <MapPin className="h-4 w-4 text-gray-500" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Street Address"
-                  className={inputBaseClassName}
-                  value={formData.pickupAddress}
-                  onChange={e => handleChange('pickupAddress', e.target.value)}
-                />
-              </div>
-
-              <div className="relative sm:col-span-2">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <Home className="h-4 w-4 text-gray-500" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Postal Code"
-                  className={inputBaseClassName}
-                  value={formData.pickupZipcode}
-                  onChange={e => handleChange('pickupZipcode', e.target.value)}
-                />
-              </div>
-            </div>
+            <AddressAutocomplete
+              value={formData.pickupFormattedAddress}
+              onChange={handleAddressChange('pickup')}
+              placeholder={formData.pickupFormattedAddress || 'Enter pickup address'}
+              required
+            />
           </div>
         )}
 
@@ -418,64 +393,17 @@ const RequestDeliveryForm = () => {
           <div className="p-6">
             <div className="mb-4 flex items-center gap-3">
               <div className="rounded-lg bg-violet-500/10 p-2">
-                <MapPin className="h-5 w-5 text-violet-400" />
+                <Box className="h-5 w-5 text-violet-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-100">Drop-off Location</h3>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <Globe className="h-4 w-4 text-gray-500" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Country"
-                  className={inputBaseClassName}
-                  value={formData.dropoffCountry}
-                  onChange={e => handleChange('dropoffCountry', e.target.value)}
-                />
-              </div>
-
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <Building className="h-4 w-4 text-gray-500" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="City"
-                  className={inputBaseClassName}
-                  value={formData.dropoffCity}
-                  onChange={e => handleChange('dropoffCity', e.target.value)}
-                />
-              </div>
-
-              <div className="relative sm:col-span-2">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <MapPin className="h-4 w-4 text-gray-500" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Street Address"
-                  className={inputBaseClassName}
-                  value={formData.dropoffAddress}
-                  onChange={e => handleChange('dropoffAddress', e.target.value)}
-                />
-              </div>
-
-              <div className="relative sm:col-span-2">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <Home className="h-4 w-4 text-gray-500" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Postal Code"
-                  className={inputBaseClassName}
-                  value={formData.dropoffZipcode}
-                  onChange={e => handleChange('dropoffZipcode', e.target.value)}
-                />
-              </div>
-            </div>
+            <AddressAutocomplete
+              value={formData.dropoffFormattedAddress}
+              onChange={handleAddressChange('dropoff')}
+              placeholder={formData.dropoffFormattedAddress || 'Enter drop-off address'}
+              required
+            />
           </div>
         )}
 
@@ -497,15 +425,19 @@ const RequestDeliveryForm = () => {
                   formData.shippingMethod === 'express'
                     ? 'border-violet-500 bg-violet-500/10'
                     : 'border-gray-800 hover:border-gray-700 hover:bg-gray-800/50'
-                } `}>
-                <div className="rounded-lg bg-violet-500/10 p-2">
-                  <Truck
-                    className={`h-5 w-5 ${formData.shippingMethod === 'express' ? 'text-violet-400' : 'text-gray-400'}`}
-                  />
-                </div>
+                } `}
+              >
+                <Truck
+                  className={`h-5 w-5 ${
+                    formData.shippingMethod === 'express' ? 'text-violet-400' : 'text-gray-400'
+                  }`}
+                />
                 <div className="flex flex-col items-start">
                   <span
-                    className={`font-medium ${formData.shippingMethod === 'express' ? 'text-violet-400' : 'text-gray-300'}`}>
+                    className={`font-medium ${
+                      formData.shippingMethod === 'express' ? 'text-violet-400' : 'text-gray-300'
+                    }`}
+                  >
                     Express Shipping
                   </span>
                   <span className="text-sm text-gray-500">Faster delivery with priority handling</span>
@@ -519,15 +451,19 @@ const RequestDeliveryForm = () => {
                   formData.shippingMethod === 'standard'
                     ? 'border-violet-500 bg-violet-500/10'
                     : 'border-gray-800 hover:border-gray-700 hover:bg-gray-800/50'
-                } `}>
-                <div className="rounded-lg bg-violet-500/10 p-2">
-                  <Truck
-                    className={`h-5 w-5 ${formData.shippingMethod === 'standard' ? 'text-violet-400' : 'text-gray-400'}`}
-                  />
-                </div>
+                } `}
+              >
+                <Truck
+                  className={`h-5 w-5 ${
+                    formData.shippingMethod === 'standard' ? 'text-violet-400' : 'text-gray-400'
+                  }`}
+                />
                 <div className="flex flex-col items-start">
                   <span
-                    className={`font-medium ${formData.shippingMethod === 'standard' ? 'text-violet-400' : 'text-gray-300'}`}>
+                    className={`font-medium ${
+                      formData.shippingMethod === 'standard' ? 'text-violet-400' : 'text-gray-300'
+                    }`}
+                  >
                     Standard Shipping
                   </span>
                   <span className="text-sm text-gray-500">Regular delivery at standard rates</span>
@@ -542,7 +478,8 @@ const RequestDeliveryForm = () => {
           {currentStep > 1 && (
             <button
               onClick={prevStep}
-              className={`${buttonBaseClassName} border-2 border-gray-800 text-gray-400 hover:bg-gray-800/50`}>
+              className={`${buttonBaseClassName} border-2 border-gray-800 text-gray-400 hover:bg-gray-800/50`}
+            >
               <ArrowLeft className="h-4 w-4" />
               Back
             </button>
@@ -551,7 +488,8 @@ const RequestDeliveryForm = () => {
           <button
             onClick={currentStep === 5 ? handleSubmit : nextStep}
             disabled={isSubmitting}
-            className={`${buttonBaseClassName} bg-violet-500 text-white hover:bg-violet-600 disabled:opacity-50 disabled:hover:bg-violet-500`}>
+            className={`${buttonBaseClassName} bg-violet-500 text-white hover:bg-violet-600 disabled:opacity-50 disabled:hover:bg-violet-500`}
+          >
             {currentStep === 5 ? (
               isSubmitting ? (
                 <>
