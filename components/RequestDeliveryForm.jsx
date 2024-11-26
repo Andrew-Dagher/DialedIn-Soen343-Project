@@ -31,10 +31,10 @@ const RequestDeliveryForm = () => {
     billingZipcode: '',
     billingCountry: '',
     billingCoordinates: { lat: null, lng: null },
-    weight: '5',
-    length: '10',
-    width: '10',
-    height: '10',
+    weight: '',
+    length: '',
+    width: '',
+    height: '',
     pickupAddress: '',
     pickupCity: '',
     pickupZipcode: '',
@@ -50,6 +50,23 @@ const RequestDeliveryForm = () => {
     shippingMethod: '',
     userId: user?.sub,
   });
+
+  // Add the pricing constants to the top of RequestDeliveryForm
+const PRICING_CONSTANTS = {
+  SIZE_LIMITS: {
+    minLength: 10,
+    maxLength: 200,
+    minWidth: 10,
+    maxWidth: 200,
+    minHeight: 10,
+    maxHeight: 200
+  },
+  WEIGHT_LIMITS: {
+    min: 0.1,
+    max: 100
+  }
+};
+
 
   const [completedSteps, setCompletedSteps] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -106,12 +123,43 @@ const RequestDeliveryForm = () => {
         );
   
       case 2:
-        return formData.width && formData.length && formData.height && formData.weight;
+      // Validate dimensions and weight with min/max checks
+      const { minLength, maxLength, minWidth, maxWidth, minHeight, maxHeight } = PRICING_CONSTANTS.SIZE_LIMITS;
+      const { min: minWeight, max: maxWeight } = PRICING_CONSTANTS.WEIGHT_LIMITS;
+
+      if (!formData.weight || formData.weight < minWeight || formData.weight > maxWeight) {
+        alert(`Weight must be between ${minWeight}kg and ${maxWeight}kg.`);
+        return false;
+      }
+
+      if (!formData.length || formData.length < minLength || formData.length > maxLength) {
+        alert(`Length must be between ${minLength}cm and ${maxLength}cm.`);
+        return false;
+      }
+
+      if (!formData.width || formData.width < minWidth || formData.width > maxWidth) {
+        alert(`Width must be between ${minWidth}cm and ${maxWidth}cm.`);
+        return false;
+      }
+
+      if (!formData.height || formData.height < minHeight || formData.height > maxHeight) {
+        alert(`Height must be between ${minHeight}cm and ${maxHeight}cm.`);
+        return false;
+      }
+
+      return true;
+
   
       case 3:
         return formData.pickupFormattedAddress;
   
       case 4:
+        // Drop-off validation with check to ensure pickup and dropoff are not the same
+        if (formData.dropoffFormattedAddress === formData.pickupFormattedAddress) {
+          alert('Pickup and dropoff locations cannot be the same. Please enter different addresses.');
+          return false;
+        }
+  
         return formData.dropoffFormattedAddress;
   
       case 5:
@@ -121,6 +169,7 @@ const RequestDeliveryForm = () => {
         return true;
     }
   };
+  
   
 
   const nextStep = () => {
