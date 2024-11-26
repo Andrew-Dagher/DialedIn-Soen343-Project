@@ -66,8 +66,6 @@ const deliveryStages = [
   },
 ];
 
-
-
 async function updateTrackingPhase(packageId) {
   try {
     const trackingData = await Tracking.findOne({ packageId });
