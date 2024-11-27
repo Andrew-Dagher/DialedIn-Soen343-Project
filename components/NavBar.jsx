@@ -27,7 +27,7 @@ const tabs = [
     link: '/request-delivery',
     mobileIcon: <Send className="h-4 w-4 text-violet-400" />
   },
-  
+
   {
     name: 'View My Points',
     link: '/view-my-points',
@@ -45,7 +45,6 @@ const tabs = [
     mobileIcon: <User className="h-4 w-4 text-violet-400" />
   }
 ];
-
 
 const tabsLoggedIn = [
   {
@@ -73,24 +72,11 @@ const tabsLoggedIn = [
     link: '/deliveries',
     mobileIcon: <Box className="h-4 w-4 text-violet-400" />
   },
-
   {
-    name: 'View your Reviews',
-    link: '/reviews',
-    mobileIcon: <Box className="h-4 w-4 text-violet-400" />
+    name: 'Dashboard',
+    link: '/UserDashboard',
+    mobileIcon: <User className="h-4 w-4 text-violet-400" />
   },
-
-  {
-    name: 'View My Points',
-    link: '/view-my-points',
-    mobileIcon: <Gift className="h-4 w-4 text-violet-400" />
-  },
-  {
-    name: 'Purchase Coupons',
-    link: '/purchase-coupons',
-    mobileIcon: <Tag className="h-4 w-4 text-violet-400" />
-  },
-
   {
     name: 'Log Out',
     link: '/logout',
@@ -98,7 +84,6 @@ const tabsLoggedIn = [
     mobileIcon: <LogOut className="h-4 w-4 text-violet-400" />
   }
 ];
-
 
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);

@@ -1,33 +1,41 @@
 'use client';
-import { useUser } from '@auth0/nextjs-auth0/client';
 import React, { useEffect, useState } from 'react';
+import { useUser } from '@auth0/nextjs-auth0/client';
 import { useRouter } from 'next/navigation';
 import {
-  ClipboardList,
   Package,
   MapPin,
   Truck,
   CreditCard,
   Edit2,
-  DollarSign,
   Tag,
+  ChevronDown,
+  Activity,
+  ArrowRight,
+  Building
 } from 'lucide-react';
 
-export default function ConfirmationPage() {
+const BillingInfoItem = ({ label, value }) => (
+  <div className="flex items-baseline justify-between gap-4">
+    <span className="text-sm text-gray-400">{label}:</span>
+    <span className="text-right text-sm text-gray-100">{value}</span>
+  </div>
+);
+
+export default function DashboardConfirmation() {
   const { user, isLoading: isUserLoading } = useUser();
   const router = useRouter();
   const [deliveryDetails, setDeliveryDetails] = useState(null);
   const [quotationPrice, setQuotationPrice] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [userCoupons, setUserCoupons] = useState([]);
-  const [selectedCoupon, setSelectedCoupon] = useState('');
-  const [couponID, setCouponID] = useState('');
-  const [discountApplied, setDiscountApplied] = useState(false);
+  const [selectedCoupon, setSelectedCoupon] = useState(null);
+  const [showCouponDropdown, setShowCouponDropdown] = useState(false);
   const [discountedPrice, setDiscountedPrice] = useState(null);
 
   useEffect(() => {
-    const savedData = localStorage.getItem("requestData");
-    const requestId = localStorage.getItem("tempRequestID");
+    const savedData = localStorage.getItem('requestData');
+    const requestId = localStorage.getItem('tempRequestID');
 
     if (savedData && requestId) {
       const details = JSON.parse(savedData);
@@ -44,7 +52,7 @@ export default function ConfirmationPage() {
     }
   }, [user]);
 
-  const fetchQuotationPrice = async (details) => {
+  const fetchQuotationPrice = async details => {
     try {
       const response = await fetch('/api/quotation', {
         method: 'POST',
@@ -54,34 +62,34 @@ export default function ConfirmationPage() {
           dimensions: {
             length: details.length,
             width: details.width,
-            height: details.height,
+            height: details.height
           },
           pickup: {
             address: details.pickupAddress,
             city: details.pickupCity,
             country: details.pickupCountry,
             zipcode: details.pickupZipcode,
-            coordinates: details.pickupCoordinates,
+            coordinates: details.pickupCoordinates
           },
           dropoff: {
             address: details.dropoffAddress,
             city: details.dropoffCity,
             country: details.dropoffCountry,
             zipcode: details.dropoffZipcode,
-            coordinates: details.dropoffCoordinates,
+            coordinates: details.dropoffCoordinates
           },
-          shippingMethod: details.shippingMethod,
-        }),
+          shippingMethod: details.shippingMethod
+        })
       });
 
       if (response.ok) {
         const data = await response.json();
         setQuotationPrice(data.data.estimatedCost);
-        setDiscountedPrice(data.data.estimatedCost); // Initially set discounted price to the estimated cost
-        localStorage.setItem("tempAmount", data.data.estimatedCost);
+        setDiscountedPrice(data.data.estimatedCost);
+        localStorage.setItem('tempAmount', data.data.estimatedCost);
       }
     } catch (error) {
-      console.error("Error fetching quotation price:", error);
+      console.error('Error fetching quotation price:', error);
     } finally {
       setIsLoading(false);
     }
@@ -97,37 +105,15 @@ export default function ConfirmationPage() {
       const response = await fetch(`/api/get-coupons`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.sub }),
+        body: JSON.stringify({ userId: user.sub })
       });
 
       if (response.ok) {
         const data = await response.json();
         setUserCoupons(data.coupons);
-      } else {
-        console.error('Failed to fetch coupons:', response.statusText);
       }
     } catch (error) {
       console.error('Error fetching coupons:', error);
-    }
-  };
-
-  const applyCoupon = () => {
-    let coupon = null;
-
-    if (selectedCoupon) {
-      coupon = userCoupons.find((c) => c.couponID === selectedCoupon && !c.isUsed);
-    } else if (couponID) {
-      coupon = userCoupons.find((c) => c.couponID === couponID && !c.isUsed);
-    }
-
-    if (coupon) {
-      const discountAmount = quotationPrice * (coupon.discountPercentage / 100);
-      const newPrice = quotationPrice - discountAmount;
-      setDiscountedPrice(newPrice);
-      setDiscountApplied(true);
-      alert('Coupon applied successfully!');
-    } else {
-      alert('Invalid or already used coupon. Please try again.');
     }
   };
 
@@ -138,273 +124,221 @@ export default function ConfirmationPage() {
   };
 
   const handleProceedToPayment = () => {
-    let appliedCouponID = '';
-  
-    if (discountApplied) {
-      // Get the applied coupon ID from either dropdown or input
-      appliedCouponID = selectedCoupon || couponID;
-      if (appliedCouponID) {
-        const usedCoupon = userCoupons.find((c) => c.couponID === appliedCouponID);
-        if (usedCoupon) {
-          usedCoupon.isUsed = true; // Mark it as used in state (local state change)
-        }
-      }
-    }
-  
-    // Store the necessary data in localStorage for payment
-    localStorage.setItem("confirmedRequestData", JSON.stringify(deliveryDetails));
-    localStorage.setItem("quotationPrice", JSON.stringify(discountedPrice));
+    let appliedCouponID = selectedCoupon?.couponID || '';
+
+    localStorage.setItem('confirmedRequestData', JSON.stringify(deliveryDetails));
+    localStorage.setItem('quotationPrice', JSON.stringify(discountedPrice));
     if (appliedCouponID) {
-      localStorage.setItem("appliedCouponID", appliedCouponID); // Store coupon ID if applied
+      localStorage.setItem('appliedCouponID', appliedCouponID);
     } else {
-      localStorage.removeItem("appliedCouponID"); // Remove if no coupon was applied
+      localStorage.removeItem('appliedCouponID');
     }
-  
-    // Redirect to the payment page
+
     router.push('/payment');
   };
-  
-  
+
+  const applyCoupon = coupon => {
+    if (coupon && !coupon.isUsed) {
+      const discountAmount = quotationPrice * (coupon.discountPercentage / 100);
+      const newPrice = quotationPrice - discountAmount;
+      setDiscountedPrice(newPrice);
+      setSelectedCoupon(coupon);
+      setShowCouponDropdown(false);
+    }
+  };
 
   if (isLoading || isUserLoading) {
     return (
-      <div className="w-full max-w-4xl mx-auto mt-6 sm:mt-8 md:mt-10 px-4 sm:px-6 md:px-8">
-        <div className="rounded-xl border-2 border-gray-800 bg-gray-950 p-4 sm:p-6 md:p-8">
-          <div className="flex items-center justify-center min-h-[200px]">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-400"></div>
-          </div>
-        </div>
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-violet-400" />
       </div>
     );
   }
 
-
   return (
-    <div className="w-full max-w-4xl mx-auto mt-6 sm:mt-8 md:mt-10 px-4 sm:px-6 md:px-8">
-      <div className="flex flex-col gap-6 sm:gap-8">
+    <div className="mx-auto max-w-7xl p-3 sm:p-4 md:p-6">
 
-        {/* Details Sections */}
-        <div className="rounded-xl border-2 border-gray-800 bg-gray-950 p-4 sm:p-6 md:p-8">
-          <div className="flex flex-col items-center text-center gap-2">
-            <ClipboardList className="w-12 h-12 text-violet-400" />
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-100">
-              Confirm Your Delivery
-            </h1>
-            <p className="text-sm sm:text-base text-gray-400 max-w-xl">
-              Please review your delivery details below before proceeding to payment.
-            </p>
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-12 lg:gap-4">
+        {/* Left Column - Package & Route */}
+        <div className="space-y-3 lg:col-span-8 lg:space-y-4">
+          {/* Package Card */}
+          <div className="rounded-xl border-2 border-gray-800 bg-gray-950 p-3 sm:p-4">
+            <div className="mb-3 flex items-center justify-between sm:mb-4">
+              <div className="flex items-center gap-2">
+                <Package className="h-5 w-5 text-violet-400" />
+                <h2 className="font-semibold text-gray-100">Package Details</h2>
+              </div>
+              <button
+                onClick={handleEdit}
+                className="rounded-lg p-2 text-yellow-500 transition-colors hover:bg-gray-800/50 hover:text-yellow-400">
+                <Edit2 className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
+              <InfoCard label="Weight" value={`${deliveryDetails?.weight} kg`} />
+              <InfoCard label="Length" value={`${deliveryDetails?.length} cm`} />
+              <InfoCard label="Width" value={`${deliveryDetails?.width} cm`} />
+              <InfoCard label="Height" value={`${deliveryDetails?.height} cm`} />
+            </div>
           </div>
-          <div className="flex flex-col gap-6">
-            {/* Contact Information */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-lg bg-gray-900/50">
-              <h3 className="text-lg font-medium text-gray-100 sm:col-span-2 flex items-center gap-2">
-                <Package className="w-5 h-5 text-violet-400" />
-                Contact Information
-              </h3>
-              <div>
-                <p className="text-sm text-gray-400">Name</p>
-                <p className="text-base text-gray-100">{deliveryDetails?.contactName}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-400">Phone</p>
-                <p className="text-base text-gray-100">{deliveryDetails?.phoneNumber}</p>
-              </div>
-              <div className="sm:col-span-2">
-                <p className="text-sm text-gray-400">Email</p>
-                <p className="text-base text-gray-100">{deliveryDetails?.email}</p>
-              </div>
+
+          {/* Route Card */}
+          <div className="rounded-xl border-2 border-gray-800 bg-gray-950 p-3 sm:p-4">
+            <div className="mb-3 flex items-center gap-2 sm:mb-4">
+              <Truck className="h-5 w-5 text-violet-400" />
+              <h2 className="font-semibold text-gray-100">Delivery Route</h2>
             </div>
-
-            {/* Package Details */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-lg bg-gray-900/50">
-              <h3 className="text-lg font-medium text-gray-100 col-span-full flex items-center gap-2">
-                <Package className="w-5 h-5 text-violet-400" />
-                Package Details
-              </h3>
-              <div>
-                <p className="text-sm text-gray-400">Weight</p>
-                <p className="text-base text-gray-100">{deliveryDetails?.weight} kg</p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+              <LocationCard
+                title="Pickup Location"
+                address={deliveryDetails?.pickupAddress}
+                city={`${deliveryDetails?.pickupCity}, ${deliveryDetails?.pickupCountry}`}
+                zipcode={deliveryDetails?.pickupZipcode}
+              />
+              <div className="hidden rotate-90 sm:block sm:rotate-0">
+                <ArrowRight className="h-6 w-6 text-gray-600" />
               </div>
-              <div>
-                <p className="text-sm text-gray-400">Length</p>
-                <p className="text-base text-gray-100">{deliveryDetails?.length} cm</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-400">Width</p>
-                <p className="text-base text-gray-100">{deliveryDetails?.width} cm</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-400">Height</p>
-                <p className="text-base text-gray-100">{deliveryDetails?.height} cm</p>
-              </div>
+              <LocationCard
+                title="Delivery Location"
+                address={deliveryDetails?.dropoffAddress}
+                city={`${deliveryDetails?.dropoffCity}, ${deliveryDetails?.dropoffCountry}`}
+                zipcode={deliveryDetails?.dropoffZipcode}
+              />
             </div>
+          </div>
+        </div>
 
-            {/* Billing, Pickup, and Dropoff Locations */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Billing Information */}
-              <div className="p-4 rounded-lg bg-gray-900/50">
-                <h3 className="text-lg font-medium text-gray-100 mb-3 flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-violet-400" />
-                  Billing Address
-                </h3>
-                <div className="space-y-2">
-                  <div>
-                    <p className="text-sm text-gray-400">Address</p>
-                    <p className="text-base text-gray-100">{deliveryDetails?.billingAddress}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">City</p>
-                    <p className="text-base text-gray-100">{deliveryDetails?.billingCity}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Zipcode</p>
-                    <p className="text-base text-gray-100">{deliveryDetails?.billingZipcode}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Country</p>
-                    <p className="text-base text-gray-100">{deliveryDetails?.billingCountry}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Pickup Location */}
-              <div className="p-4 rounded-lg bg-gray-900/50">
-                <h3 className="text-lg font-medium text-gray-100 mb-3 flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-violet-400" />
-                  Pickup Location
-                </h3>
-                <div className="space-y-2">
-                  <div>
-                    <p className="text-sm text-gray-400">Address</p>
-                    <p className="text-base text-gray-100">{deliveryDetails?.pickupAddress}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">City</p>
-                    <p className="text-base text-gray-100">{deliveryDetails?.pickupCity}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Zipcode</p>
-                    <p className="text-base text-gray-100">{deliveryDetails?.pickupZipcode}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Country</p>
-                    <p className="text-base text-gray-100">{deliveryDetails?.pickupCountry}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Drop-off Location */}
-              <div className="p-4 rounded-lg bg-gray-900/50">
-                <h3 className="text-lg font-medium text-gray-100 mb-3 flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-violet-400" />
-                  Drop-off Location
-                </h3>
-                <div className="space-y-2">
-                  <div>
-                    <p className="text-sm text-gray-400">Address</p>
-                    <p className="text-base text-gray-100">{deliveryDetails?.dropoffAddress}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">City</p>
-                    <p className="text-base text-gray-100">{deliveryDetails?.dropoffCity}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Zipcode</p>
-                    <p className="text-base text-gray-100">{deliveryDetails?.dropoffZipcode}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Country</p>
-                    <p className="text-base text-gray-100">{deliveryDetails?.dropoffCountry}</p>
-                  </div>
-                </div>
-              </div>
+        {/* Right Column */}
+        <div className="space-y-3 lg:col-span-4 lg:space-y-4">
+          {/* Billing Information */}
+          <div className="rounded-xl border-2 border-gray-800 bg-gray-950 p-3">
+            <div className="mb-2 flex items-center gap-2">
+              <Building className="h-4 w-4 text-violet-400" />
+              <h2 className="text-sm font-semibold text-gray-100">Billing Information</h2>
             </div>
+            <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-1">
+              <BillingInfoItem label="Name" value={deliveryDetails?.contactName} />
+              <BillingInfoItem label="Phone" value={deliveryDetails?.phoneNumber} />
+              <BillingInfoItem label="Email" value={deliveryDetails?.email} className="sm:col-span-2 lg:col-span-1" />
+              <div className="my-1.5 h-px bg-gray-800 sm:col-span-2 lg:col-span-1"></div>
+              <BillingInfoItem
+                label="Address"
+                value={deliveryDetails?.billingAddress}
+                className="sm:col-span-2 lg:col-span-1"
+              />
+              <BillingInfoItem
+                label="City/Country"
+                value={`${deliveryDetails?.billingCity}, ${deliveryDetails?.billingCountry}`}
+                className="sm:col-span-2 lg:col-span-1"
+              />
+              <BillingInfoItem label="ZIP" value={deliveryDetails?.billingZipcode} />
+            </div>
+          </div>
 
-            {/* Shipping Method & Price */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-4 rounded-lg bg-gray-900/50">
-                <h3 className="text-lg font-medium text-gray-100 mb-3 flex items-center gap-2">
-                  <Truck className="w-5 h-5 text-violet-400" />
-                  Shipping Method
-                </h3>
-                <p className="text-base text-gray-100 capitalize">
-                  {deliveryDetails?.shippingMethod === 'express' ? 'Express Shipping' : 'Standard Shipping'}
-                </p>
+          {/* Payment Summary */}
+          <div className="rounded-xl border-2 border-gray-800 bg-gray-950 p-4">
+            <h2 className="mb-4 font-semibold text-gray-100">Payment Summary</h2>
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Base Price</span>
+                <span className="text-gray-100">${quotationPrice?.toFixed(2)}</span>
               </div>
 
-              {discountedPrice !== null && (
-                <div className="p-4 rounded-lg bg-gray-900/50">
-                  <h3 className="text-lg font-medium text-gray-100 mb-3 flex items-center gap-2">
-                    <DollarSign className="w-5 h-5 text-violet-400" />
-                    Total Cost
-                  </h3>
-                  <p className="text-xl font-semibold text-violet-400">
-                    ${discountedPrice.toFixed(2)}
-                  </p>
+              {/* Coupon Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowCouponDropdown(!showCouponDropdown)}
+                  className="flex w-full items-center justify-between rounded-lg border-2 border-gray-800 bg-gray-950 p-2 text-sm transition-colors hover:border-violet-400">
+                  <div className="flex items-center gap-2">
+                    <Tag className="h-4 w-4 text-violet-400" />
+                    <span className="text-gray-300">
+                      {selectedCoupon ? `${selectedCoupon.couponID} Applied` : 'Apply Coupon'}
+                    </span>
+                  </div>
+                  <ChevronDown
+                    className={`h-4 w-4 text-gray-400 transition-transform ${showCouponDropdown ? 'rotate-180 transform' : ''}`}
+                  />
+                </button>
+
+                {showCouponDropdown && (
+                  <div className="absolute left-0 right-0 top-full z-10 mt-2 rounded-lg border-2 border-gray-800 bg-gray-950 shadow-lg">
+                    <div className="space-y-1 p-2">
+                      {userCoupons
+                        .filter(coupon => !coupon.isUsed)
+                        .map(coupon => (
+                          <button
+                            key={coupon.couponID}
+                            onClick={() => applyCoupon(coupon)}
+                            className="flex w-full items-center justify-between rounded-md p-2 text-sm text-gray-100 hover:bg-gray-800">
+                            <span>{coupon.couponID}</span>
+                            <span className="text-violet-400">{coupon.discountPercentage}% OFF</span>
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {selectedCoupon && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Discount</span>
+                  <span className="text-green-400">-${(quotationPrice - discountedPrice).toFixed(2)}</span>
                 </div>
               )}
-            </div>
 
-            {/* Coupon Section */}
-            <div className="p-4 rounded-lg bg-gray-900/50 mt-6">
-              <h3 className="text-lg font-medium text-gray-100 mb-3 flex items-center gap-2">
-                <Tag className="w-5 h-5 text-violet-400" />
-                Apply Coupon
-              </h3>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <select
-                  value={selectedCoupon}
-                  onChange={(e) => setSelectedCoupon(e.target.value)}
-                  className="w-full rounded-lg p-2.5 border-2 border-gray-800 bg-gray-950 text-gray-100"
-                >
-                  <option value="">Select from My Coupons</option>
-                  {userCoupons
-                    .filter((coupon) => !coupon.isUsed)
-                    .map((coupon) => (
-                      <option key={coupon.couponID} value={coupon.couponID}>
-                        {coupon.couponID} - {coupon.discountPercentage}% Discount
-                      </option>
-                    ))}
-                </select>
-                <input
-                  type="text"
-                  value={couponID}
-                  onChange={(e) => setCouponID(e.target.value)}
-                  placeholder="Enter Coupon ID"
-                  className="w-full rounded-lg p-2.5 border-2 border-gray-800 bg-gray-950 text-gray-100"
-                />
-                <button
-                  onClick={applyCoupon}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-xl px-6 py-3 
-                        bg-violet-400 hover:bg-violet-600 text-white font-medium transition-colors"
-                >
-                  Apply Coupon
-                </button>
+              <div className="border-t border-gray-800 pt-3">
+                <div className="flex justify-between font-semibold">
+                  <span className="text-gray-100">Total Amount</span>
+                  <span className="text-violet-400">${discountedPrice?.toFixed(2)}</span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 mt-4">
-            <button
-              onClick={handleEdit}
-              className="flex-1 flex items-center justify-center gap-2 rounded-xl px-6 py-3 
-                     bg-yellow-500 hover:bg-yellow-600 text-white font-medium transition-colors"
-            >
-              <Edit2 className="w-5 h-5" />
-              Edit Details
-            </button>
-            <button
-              onClick={handleProceedToPayment}
-              className="flex-1 flex items-center justify-center gap-2 rounded-xl px-6 py-3 
-                     bg-violet-400 hover:bg-violet-600 text-white font-medium transition-colors"
-            >
-              <CreditCard className="w-5 h-5" />
-              Proceed to Payment
-            </button>
-          </div>
+          {/* Action Button */}
+          <button
+            onClick={handleProceedToPayment}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-400 px-4 py-3 font-medium text-white transition-colors hover:bg-violet-500">
+            <CreditCard className="h-5 w-5" />
+            Proceed to Payment
+          </button>
         </div>
       </div>
     </div>
   );
 }
+
+// Update StatCard component
+const StatCard = ({ title, value, icon, trend, highlight }) => (
+  <div className="rounded-xl border-2 border-gray-800 bg-gray-950 p-3 sm:p-4">
+    <div className="mb-2 flex items-center justify-between">
+      <span className="text-xs text-gray-400 sm:text-sm">{title}</span>
+      {icon}
+    </div>
+    <div className="flex items-baseline gap-2">
+      <span className={`text-lg font-semibold sm:text-xl ${highlight ? 'text-green-400' : 'text-gray-100'}`}>
+        {value}
+      </span>
+      {trend && <span className="text-xs text-green-400">{trend}</span>}
+    </div>
+  </div>
+);
+
+// Update InfoCard component
+const InfoCard = ({ label, value }) => (
+  <div className="rounded-lg bg-gray-950 p-2 sm:p-3">
+    <p className="mb-1 text-xs text-gray-400">{label}</p>
+    <p className="text-sm font-medium text-gray-100 sm:text-base">{value}</p>
+  </div>
+);
+
+// Update LocationCard component
+const LocationCard = ({ title, address, city, zipcode }) => (
+  <div className="flex-1 rounded-lg bg-gray-900 p-2 sm:p-3">
+    <p className="mb-1 text-xs text-gray-400">{title}</p>
+    <p className="text-sm font-medium text-gray-100 sm:text-base">{address}</p>
+    <p className="text-xs text-gray-500 sm:text-sm">{city}</p>
+    {zipcode && <p className="text-xs text-gray-500 sm:text-sm">ZIP: {zipcode}</p>}
+  </div>
+);
