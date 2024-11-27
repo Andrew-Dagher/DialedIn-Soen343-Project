@@ -52,7 +52,7 @@ export default function DeliveryPage() {
           }
           const data = await response.json();
           console.log('Review:', data);
-          setOpenReviewId(false);
+          setOpenReviewId(null);
           alert('Review submitted!');
         } catch (error) {
           console.error('Error submitting review:', error);
