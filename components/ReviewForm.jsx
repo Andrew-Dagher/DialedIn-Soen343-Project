@@ -49,12 +49,12 @@ export default function ReviewForm({ formData, setFormData, handleSubmit, isSubm
                   onClick={() => handleRatingChange(value)}
                   className={`flex h-12 w-12 items-center justify-center rounded-xl transition-all ${
                     formData.rating === value
-                      ? 'bg-violet-500 text-white'
+                      ? 'bg-yellow-400 text-white'
                       : 'bg-gray-800/50 text-gray-400 hover:bg-gray-800'
                   }`}>
                   <Star className={`h-6 w-6 ${formData.rating === value ? 'fill-current' : ''}`} />
                 </button>
-                <span className={`text-sm ${formData.rating === value ? 'text-violet-400' : 'text-gray-500'}`}>
+                <span className={`text-sm ${formData.rating === value ? 'text-yellow-400' : 'text-gray-500'}`}>
                   {ratingLabels[value]}
                 </span>
               </div>

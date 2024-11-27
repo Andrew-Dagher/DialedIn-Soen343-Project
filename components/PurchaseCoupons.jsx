@@ -93,8 +93,8 @@ const PurchaseCoupons = ({ showPointsBalance = true }) => {
       <div className="rounded-xl border-2 border-gray-800 bg-gray-950 p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <div className="rounded-full border-2 border-violet-400 bg-violet-400/10 p-3">
-              <DollarSign className="h-6 w-6 text-violet-400" />
+            <div className="rounded-full border-2 border-green-400 bg-violet-400/10 p-3">
+              <DollarSign className="h-6 w-6 text-green-400" />
             </div>
             <div>
               <p className="text-sm text-gray-500">Available Points</p>
@@ -136,7 +136,7 @@ const PurchaseCoupons = ({ showPointsBalance = true }) => {
                     : 'cursor-not-allowed border-gray-800 bg-gray-800/50 opacity-60'
                 }`}>
                 {option.popular && (
-                  <div className="absolute -top-2 left-3 flex items-center gap-1 rounded-full bg-violet-500 px-2 py-0.5 text-xs text-white sm:-top-3 sm:left-4 sm:py-1">
+                  <div className="absolute -top-2 left-3 flex items-center gap-1 rounded-full bg-yellow-400 px-2 py-0.5 text-xs text-white sm:-top-3 sm:left-4 sm:py-1">
                     <Star className="h-3 w-3" />
                     <span className="text-xs">Popular</span>
                   </div>

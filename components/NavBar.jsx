@@ -27,17 +27,6 @@ const tabs = [
     link: '/request-delivery',
     mobileIcon: <Send className="h-4 w-4 text-violet-400" />
   },
-
-  {
-    name: 'View My Points',
-    link: '/view-my-points',
-    mobileIcon: <Gift className="h-4 w-4 text-violet-400" />
-  },
-  {
-    name: 'Purchase Coupons',
-    link: '/purchase-coupons',
-    mobileIcon: <Tag className="h-4 w-4 text-violet-400" />
-  },
   {
     name: 'Login',
     link: '/api/auth/login',
