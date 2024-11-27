@@ -145,7 +145,7 @@ const handleQuickReply = async (message) => {
       {chatOpen && (
         <div className={`
           fixed z-50 
-          sm:bottom-20 sm:right-5 sm:w-[600px] sm:h-[800px]
+          sm:bottom-20 sm:right-5 sm:w-[550px] sm:h-[650px]
           bottom-0 right-0 w-full h-[85vh]
           flex flex-col rounded-t-2xl sm:rounded-2xl 
           border-t-2 sm:border-2 border-gray-800 
