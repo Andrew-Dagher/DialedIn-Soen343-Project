@@ -27,7 +27,7 @@ const PaymentPage = () => {
     const storedAmount = localStorage.getItem('quotationPrice');
     const storedDeliveryDetails = JSON.parse(localStorage.getItem('requestData')); // Retrieve delivery details
     const storedCouponID = localStorage.getItem('appliedCouponID'); // Retrieve coupon ID if available
-  
+
     if (storedRequestId && storedAmount && storedDeliveryDetails) {
       setTotalPayment(parseFloat(storedAmount));
       setRequestId(storedRequestId);
@@ -40,7 +40,6 @@ const PaymentPage = () => {
       setError('No request ID, amount, or delivery details found');
     }
   }, []);
-  
 
   const validateCardNumber = number => number.length === 16 && /^\d+$/.test(number);
   const validateExpiryDate = date => /^(0[1-9]|1[0-2])\/\d{2}$/.test(date);
@@ -51,7 +50,7 @@ const PaymentPage = () => {
     setPaymentDetails({ ...paymentDetails, [name]: value });
   };
 
-  const handlePaymentMethodChange = (method) => {
+  const handlePaymentMethodChange = method => {
     setPaymentMethod(method);
   };
 
@@ -75,21 +74,32 @@ const PaymentPage = () => {
 
     try {
       const response = await axios.post('/api/payment', {
-        requestID: requestId, 
+        requestID: requestId,
         paymentInfo: {
           cardNumber: paymentDetails.cardNumber,
           expiryDate: paymentDetails.expiryDate,
           cvv: paymentDetails.cvv,
           paymentMethod: paymentMethod
         },
-        deliveryDetails, // Send all delivery details
+        deliveryDetails,
         couponID,
         amount: totalPayment
       });
 
       if (response.status === 200 && response.data.success) {
-        setSuccess('Payment authorized. Your payment has been successfully processed.');
+        setSuccess('Payment authorized. Redirecting to your deliveries...');
         setPaymentDetails({ cardNumber: '', expiryDate: '', cvv: '' });
+
+        // Clear local storage
+        localStorage.removeItem('tempRequestID');
+        localStorage.removeItem('quotationPrice');
+        localStorage.removeItem('requestData');
+        localStorage.removeItem('appliedCouponID');
+
+        // Add a small delay before redirecting to show the success message
+        setTimeout(() => {
+          router.push('/deliveries');
+        }, 1500);
       } else {
         setError('Payment authorization failed. Please try again.');
       }
@@ -100,8 +110,8 @@ const PaymentPage = () => {
   };
 
   const paymentMethods = [
-    { id: 'credit_card', name: 'Credit Card', icon: CreditCard, value: "credit_card" },
-    { id: 'debit', name: 'Debit Card', icon: CreditCard, value: "debit" }
+    { id: 'credit_card', name: 'Credit Card', icon: CreditCard, value: 'credit_card' },
+    { id: 'debit', name: 'Debit Card', icon: CreditCard, value: 'debit' }
   ];
 
   return (
