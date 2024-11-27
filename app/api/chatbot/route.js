@@ -1,122 +1,145 @@
-// app/api/chatbot/route.js
-
 import { NextResponse } from 'next/server';
 import ChatbotStrategy from '../../../services/ChatbotStrategy';
 import connectToDatabase from '../../../utils/mongodb';
 import { handleUserTrackingRequest } from '../../../services/TrackingService';
 
 const chatbotStrategy = new ChatbotStrategy();
+const conversationHistory = {}; // Simple in-memory storage for conversation history
+
+const companyInfo = `
+You are a customer service representative for DialedIn, specializing in delivery services. 
+Provide friendly, professional, and accurate responses based on the following services:
+
+1. **Package Tracking**:
+   - Help customers track packages by requesting their tracking number.
+   - Provide real-time updates about package locations, potential delays, and reasons.
+
+2. **Quotations for Delivery Services**:
+   - Provide accurate delivery quotations based on package weight, dimensions, destination, and speed.
+
+3. **General Inquiries**:
+   - Address all inquiries related to DialedIn services.
+   - Politely redirect unrelated questions to remain focused on delivery services.
+
+Follow these protocols:
+- Answer in around 15 words.
+- Maintain a professional and empathetic tone.
+- Focus responses on DialedIn's services.
+- Avoid providing information outside the scope of DialedIn.
+`;
 
 export async function POST(request) {
   await connectToDatabase(); // Ensure the database is connected
 
-
-  console.log('Request body:', request.body);
   const { question } = await request.json();
   if (!question) {
-    console.error('Missing question in request body', question);
     return NextResponse.json({ error: 'Missing question in request body' }, { status: 400 });
-  } else {
-    console.log('Question:', question);
+  }
+
+  const userId = 'default_user'; // Static user ID for simplicity
+  if (!conversationHistory[userId]) {
+    conversationHistory[userId] = { history: [], quotationDetails: null };
   }
 
   try {
-    if (question.toLowerCase().includes('payment') || question.toLowerCase().includes('paid')) {
-      if (!question.match(/\d+/)) {
-        const response = "Could you please provide me with your tracking number to check the payment status?";
-        return NextResponse.json({ answer: response });
-      }
-      const trackingNumber = question.match(/\d+/)[0];
+    // Save user question to history
+    conversationHistory[userId].history.push({ role: 'user', message: question });
+
+    // Detect tracking number
+    const trackingNumber = question.match(/[A-Za-z0-9_-]{21}/)?.[0];
+    if (trackingNumber) {
       try {
-        const paymentInfo = await chatbotStrategy.getPaymentStatus(trackingNumber);
-        const response = `For tracking number ${trackingNumber}, the payment status is: ${paymentInfo.status}. Amount: ${paymentInfo.amount}, paid on ${paymentInfo.date} via ${paymentInfo.method}. Can I help you with anything else?`;
+        const location = await chatbotStrategy.getPackageLocation(trackingNumber);
+        const trackingLink = `http://localhost:3000/tracking?packageId=${trackingNumber}`;
+        const response = `The package with tracking number ${trackingNumber} is at: ${location}. You can also check the status --> ${trackingLink}.`;
+
+        // Save bot response to history
+        conversationHistory[userId].history.push({ role: 'bot', message: response });
         return NextResponse.json({ answer: response });
-      } catch (paymentError) {
-        const response = `I apologize, but I couldn't find any payment information for tracking number ${trackingNumber}. Could you please verify the number?`;
-        return NextResponse.json({ answer: response });
+      } catch (error) {
+        const errorMessage = `I couldn't find information for tracking number ${trackingNumber}. Please verify it.`;
+        conversationHistory[userId].history.push({ role: 'bot', message: errorMessage });
+        return NextResponse.json({ answer: errorMessage });
       }
     }
 
-    if (question.toLowerCase().includes('track')) {
-      const trackingNumber = question.match(/[A-Za-z0-9_-]{21}/)?.[0];
-        console.log('Tracking Number:', trackingNumber);
+    // Handle quotation requests
+    if (
+      question.toLowerCase().includes('quote') ||
+      question.toLowerCase().includes('quotation') ||
+      question.toLowerCase().includes('weight') ||
+      question.toLowerCase().includes('dimensions') ||
+      question.toLowerCase().includes('pickup') ||
+      question.toLowerCase().includes('dropoff') ||
+      question.toLowerCase().includes('shipping method')
+    ) {
+      try {
+        const extractedDetails = await chatbotStrategy.extractDetails(question);
+        if (
+          extractedDetails.weight &&
+          extractedDetails.dimensions &&
+          extractedDetails.pickup &&
+          extractedDetails.dropoff &&
+          extractedDetails.shippingMethod
+        ) {
+          const quote = await chatbotStrategy.getQuotation({
+            weight: extractedDetails.weight,
+            dimensions: extractedDetails.dimensions,
+            pickup: { address: extractedDetails.pickup },
+            dropoff: { address: extractedDetails.dropoff },
+            shippingMethod: extractedDetails.shippingMethod,
+          });
 
-      
-      if (!trackingNumber) {
-        return NextResponse.json({ answer: "Could you please provide me with your tracking number so I can check on its status?" });
+          // Combine quotation details with extracted data for conversation history
+          conversationHistory[userId].quotationDetails = { ...quote, ...extractedDetails };
+
+          // Prepare delivery data for the redirect link
+          const deliveryData = {
+            pickup: {
+              formatted_address: extractedDetails.pickup,
+              address: extractedDetails.pickup,
+            },
+            dropoff: {
+              formatted_address: extractedDetails.dropoff,
+              address: extractedDetails.dropoff,
+            },
+            dimensions: {
+              length: extractedDetails.dimensions.length,
+              width: extractedDetails.dimensions.width,
+              height: extractedDetails.dimensions.height,
+            },
+            weight: extractedDetails.weight,
+            shippingMethod: extractedDetails.shippingMethod,
+            quoteData: quote,
+            acceptedAt: new Date().toISOString(),
+          };
+
+          const redirectLink = `/request-delivery?data=${encodeURIComponent(JSON.stringify(deliveryData))}`;
+          const quotationResponse = `Estimated cost: $${quote.total.toFixed(2)} using ${extractedDetails.shippingMethod} shipping. Proceed to request delivery --> ${redirectLink}`;
+
+          conversationHistory[userId].history.push({ role: 'bot', message: quotationResponse });
+          return NextResponse.json({ answer: quotationResponse, redirectLink });
+        } else {
+          const missingDetailsResponse = `It seems some quotation details are missing. Please provide weight, dimensions, pickup, dropoff addresses, and shipping method.`;
+          conversationHistory[userId].history.push({ role: 'bot', message: missingDetailsResponse });
+          return NextResponse.json({ answer: missingDetailsResponse });
+        }
+      } catch (error) {
+        const errorMessage = `Failed to process your quotation request: ${error.message}`;
+        conversationHistory[userId].history.push({ role: 'bot', message: errorMessage });
+        return NextResponse.json({ answer: errorMessage });
       }
-  
-      if (question.toLowerCase().includes('track')) {
-        const trackingNumber = question.match(/[A-Za-z0-9_-]{21}/)?.[0];
-        console.log('Tracking Number:', trackingNumber);
-        if (!trackingNumber) {
-            return NextResponse.json({ answer: "Could you please provide me with your tracking number so I can check on its status?" });
-        }
-    
-        try {
-            const location = await handleUserTrackingRequest(trackingNumber);
-            const trackingLink = `http://localhost:3000/tracking?packageId=${trackingNumber}`;
-            const description1 = location.locationDetails.description;
-            console.log(location);
-            const response = `Thank you for providing your tracking number. ${description1}. You can also check the status at ${trackingLink}.`;
-            console.log('Tracking response:', response);
-            return NextResponse.json({ answer: response });
-        } catch (trackingError) {
-            console.error(`Tracking error for ${trackingNumber}:`, trackingError);
-            return NextResponse.json({ answer: `I'm sorry, but I couldn't find any information for tracking number ${trackingNumber}. Could you please verify the number and try again?` });
-        }
     }
-    
-    }
-    
 
-    const companyInfo = `
-    You are a customer service representative for DialedIn, which specializes in delivery services. 
-    Please respond in a friendly and professional manner, providing accurate information based on the company context. 
-    
-    The services offered by DialedIn include:
-    
-    1. **Package Tracking**: 
-       - Assist customers in tracking their packages by requesting the tracking number. 
-       - Provide real-time updates about the package's location, which is obtained from our tracking system.
-       - Inform customers about any potential delays and the reasons behind them.
-    
-    2. **Payment Status**: 
-       - Help customers check the status of their payments.
-       - If asked about a payment, inquire about the order number or tracking number to retrieve relevant information.
-       - Provide clear information regarding payment confirmations, processing times, and any issues that may have occurred.
-    
-    3. **Quotations for Delivery Services**: 
-       - Provide customers with quotations based on their delivery needs.
-       - Ask for details such as package weight, dimensions, destination, and desired delivery speed to generate an accurate quote.
-       - Clarify any additional fees that may apply based on the service level requested.
-    
-    4. **General Inquiries**: 
-       - Welcome all general inquiries related to DialedIn’s services.
-       - Always redirect conversations back to the services provided by DialedIn.
-       - If a customer inquires about unrelated topics, politely inform them that you can only assist with questions related to 
-       delivery services, package tracking, payment status, and quotes.
-    
-    5. **Customer Service Protocol**: 
-       - Maintain a tone that is professional, courteous, and helpful.
-       - Be empathetic towards customer concerns and respond to them with understanding.
-       - Reassure customers that their inquiries are important and that you are there to help.
-    
-    6. **Limitations**: 
-       - Do not mention any other company names, services, or unrelated topics. 
-       - Avoid providing information on services that DialedIn does not offer, ensuring customers receive accurate and relevant answers.
-    
-    When responding to questions, consider the following guidelines:
-    - Start with a welcoming greeting specific to DialedIn (e.g., "Thank you for reaching out to DialedIn! How can I assist you today?").
-    - For tracking inquiries, prompt the user for their tracking number.
-    - For payment inquiries, ask for relevant details to assist them effectively.
-    - For quotes, gather all necessary information and provide a clear estimate.
-    - Always strive to keep the conversation focused on the services and information related to DialedIn.
-    - Keep the response short (about 20 words) and straight to the point.
+    // Fallback for other inquiries
+    const contextAwarePrompt = `
+      ${companyInfo}
+      Conversation History: ${JSON.stringify(conversationHistory[userId].history)}
+      User: ${question}
+      Assistant:
     `;
-
-    const conversationPrompt = companyInfo + '\n' + `User: ${question}\nAssistant:`;
-    const response = await chatbotStrategy.sendToLlamaModel(conversationPrompt);
+    const response = await chatbotStrategy.sendToLlamaModel(contextAwarePrompt);
+    conversationHistory[userId].history.push({ role: 'bot', message: response });
     return NextResponse.json({ answer: response });
   } catch (error) {
     console.error(`Error processing request: ${error.message}`);

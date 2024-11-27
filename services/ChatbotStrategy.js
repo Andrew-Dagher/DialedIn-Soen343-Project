@@ -1,7 +1,6 @@
-// services/ChatbotStrategy.js
-
 import ollama from 'ollama'; // Assuming ollama is the library used for LLaMA model interaction
-import { handleUserTrackingRequest } from './TrackingService'; // Import the method from TrackingService
+import { handleUserTrackingRequest } from './TrackingService';
+import QuotationService from './QuotationService';
 
 class ChatbotStrategy {
   async sendToLlamaModel(prompt) {
@@ -23,7 +22,6 @@ class ChatbotStrategy {
       if (trackingData.error) {
         throw new Error(trackingData.message);
       }
-      console.log('Tracking data:', trackingData);
       return trackingData.locationDetails.description;
     } catch (error) {
       console.error(`Error getting package location: ${error.message}`);
@@ -31,32 +29,73 @@ class ChatbotStrategy {
     }
   }
 
-  async getPaymentStatus(trackingNumber) {
-    const mockPaymentData = {
-      '123456': {
-        status: 'Paid',
-        amount: '$45.99',
-        date: '2024-02-01',
-        method: 'Credit Card'
-      },
-      '789012': {
-        status: 'Pending',
-        amount: '$32.50',
-        date: '2024-02-02',
-        method: 'PayPal'
-      }
-    };
+  parseStructuredResponse(response) {
+    try {
+      const weightMatch = response.match(/Weight:\s*(\d+|\bnull\b)\s*kg/i);
+      const dimensionsMatch = response.match(/Dimensions:\s*(\d+|\bnull\b)\s*x\s*(\d+|\bnull\b)\s*x\s*(\d+|\bnull\b)\s*cm/i);
+      const pickupMatch = response.match(/Pickup Address:\s*(.+?)(?=\n|$)/i);
+      const dropoffMatch = response.match(/Dropoff Address:\s*(.+?)(?=\n|$)/i);
+      const shippingMethodMatch = response.match(/Shipping Method:\s*(.+?)(?=\n|$)/i);
 
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const paymentInfo = mockPaymentData[trackingNumber];
-        if (paymentInfo) {
-          resolve(paymentInfo);
-        } else {
-          reject('Payment information not found.');
-        }
-      }, 1000);
-    });
+      const weight = weightMatch ? parseFloat(weightMatch[1]) : null;
+      const dimensions = dimensionsMatch
+        ? {
+            length: parseFloat(dimensionsMatch[1]),
+            width: parseFloat(dimensionsMatch[2]),
+            height: parseFloat(dimensionsMatch[3]),
+          }
+        : null;
+      const pickup = pickupMatch ? pickupMatch[1].trim() : null;
+      const dropoff = dropoffMatch ? dropoffMatch[1].trim() : null;
+      const shippingMethod = shippingMethodMatch ? shippingMethodMatch[1].trim().toLowerCase() : null;
+
+      if (
+        weight != null &&
+        dimensions &&
+        dimensions.length != null &&
+        dimensions.width != null &&
+        dimensions.height != null &&
+        pickup &&
+        dropoff &&
+        shippingMethod
+      ) {
+        return { weight, dimensions, pickup, dropoff, shippingMethod };
+      } else {
+        throw new Error('Missing or invalid fields in the AI response.');
+      }
+    } catch (error) {
+      console.error('Error parsing structured response:', error);
+      throw new Error('Failed to parse structured response.');
+    }
+  }
+
+  async extractDetails(message) {
+    const prompt = `
+      Based on the user's input: "${message}", extract the following details in text format:
+        Weight: <weight> kg
+        Dimensions: <length> x <width> x <height> cm
+        Pickup Address: <pickup_address>
+        Dropoff Address: <dropoff_address>
+        Shipping Method: <shipping_method>
+      If a detail is missing, include "null" in its place.
+    `;
+
+    try {
+      const response = await this.sendToLlamaModel(prompt);
+      return this.parseStructuredResponse(response);
+    } catch (error) {
+      console.error('Error extracting details:', error);
+      throw new Error('Failed to extract details.');
+    }
+  }
+
+  async getQuotation(details) {
+    try {
+      return await QuotationService.getQuote(details);
+    } catch (error) {
+      console.error('Error getting quotation:', error);
+      throw new Error('Failed to get quotation.');
+    }
   }
 }
 
