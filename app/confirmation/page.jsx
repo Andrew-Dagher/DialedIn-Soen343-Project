@@ -157,23 +157,6 @@ export default function DashboardConfirmation() {
 
   return (
     <div className="mx-auto max-w-7xl p-3 sm:p-4 md:p-6">
-      {/* Stats Header */}
-      <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
-        <StatCard
-          title="Package Status"
-          value="Pending"
-          icon={<Activity className="h-5 w-5 text-violet-400" />}
-          trend="+12%"
-        />
-        <StatCard title="Estimated Time" value="2-3 Days" icon={<Truck className="h-5 w-5 text-violet-400" />} />
-        <StatCard title="Distance" value="1,205 km" icon={<MapPin className="h-5 w-5 text-violet-400" />} />
-        <StatCard
-          title="Total Cost"
-          value={`$${discountedPrice?.toFixed(2)}`}
-          icon={<CreditCard className="h-5 w-5 text-violet-400" />}
-          highlight
-        />
-      </div>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-12 lg:gap-4">
