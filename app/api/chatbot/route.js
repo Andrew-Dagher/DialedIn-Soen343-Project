@@ -51,7 +51,8 @@ export async function POST(request) {
       try {
         const location = await chatbotStrategy.getPackageLocation(trackingNumber);
         const trackingLink = `http://localhost:3000/tracking?packageId=${trackingNumber}`;
-        const response = `The package with tracking number ${trackingNumber} is at: ${location}. You can also check the status --> ${trackingLink}.`;
+        console.log(location);
+        const response = `The package with tracking number ${trackingNumber} has the following status: ${location}. You can also check the status --> ${trackingLink}.`;
 
         // Save bot response to history
         conversationHistory[userId].history.push({ role: 'bot', message: response });
