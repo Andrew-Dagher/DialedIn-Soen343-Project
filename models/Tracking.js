@@ -9,10 +9,10 @@ const TrackingSchema = new Schema({
   locationDetails: {
     location: { type: String },
     description: { type: String },
-    progress: { type: Number, default: 0 },
+    progress: { type: Number, default: 0 }
   },
   deliveryProgress: { type: Number, default: 0 },
-  userId: {type: String, default: null}
+  userId: { type: String, default: null }
 });
 
 module.exports = mongoose.models.Tracking || mongoose.model('Tracking', TrackingSchema);
