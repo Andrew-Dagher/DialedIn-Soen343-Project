@@ -1,5 +1,5 @@
-import connectToDatabase from '../../../../utils/mongodb'; 
-import { handleUserTrackingRequest } from '../../../../services/TrackingService'; 
+import connectToDatabase from '../../../../utils/mongodb';
+import { handleUserTrackingRequest } from '../../../../services/TrackingService';
 
 export async function POST(req) {
   try {
@@ -8,20 +8,14 @@ export async function POST(req) {
     const packageId = req.nextUrl?.pathname.split('/').pop();
 
     if (!packageId) {
-      return new Response(
-        JSON.stringify({ error: 'PackageId is required' }),
-        { status: 400 }
-      );
+      return new Response(JSON.stringify({ error: 'PackageId is required' }), { status: 400 });
     }
 
     const trackingData = await handleUserTrackingRequest(packageId);
 
     if (trackingData.error) {
       console.warn('Tracking error handled gracefully:', trackingData.error);
-      return new Response(
-        JSON.stringify({ error: trackingData.error }), 
-        { status: 400 } 
-      );
+      return new Response(JSON.stringify({ error: trackingData.error }), { status: 400 });
     }
 
     const responseData = {
@@ -33,16 +27,13 @@ export async function POST(req) {
         clientName: trackingData.clientName,
         clientPhone: trackingData.clientPhone,
         locationDetails: trackingData.locationDetails,
-        deliveryProgress: trackingData.deliveryProgress,
-      },
+        deliveryProgress: trackingData.deliveryProgress
+      }
     };
 
     return new Response(JSON.stringify(responseData), { status: 200 });
   } catch (error) {
     console.error('Unexpected error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Failed to handle tracking request' }),
-      { status: 500 }
-    );
+    return new Response(JSON.stringify({ error: 'Failed to handle tracking request' }), { status: 500 });
   }
 }

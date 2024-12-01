@@ -5,7 +5,7 @@ const TrackingSearch = () => {
   const [packageId, setPackageId] = useState('');
   const router = useRouter();
 
-  const handleInputChange = (e) => {
+  const handleInputChange = e => {
     setPackageId(e.target.value);
   };
 
@@ -31,8 +31,7 @@ const TrackingSearch = () => {
         />
         <button
           onClick={handleTrackClick}
-          className="rounded-xl bg-violet-400 text-sm font-medium text-white transition-colors hover:bg-violet-600 sm:h-14 sm:px-12 sm:text-base"
-        >
+          className="rounded-xl bg-violet-400 text-sm font-medium text-white transition-colors hover:bg-violet-600 sm:h-14 sm:px-12 sm:text-base">
           Track
         </button>
       </div>
