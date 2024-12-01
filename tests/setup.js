@@ -13,6 +13,18 @@ jest.mock('next/navigation', () => ({
   usePathname: () => ''
 }));
 
+global.TextEncoder = class {
+  encode(str) {
+    return Buffer.from(str, 'utf-8');
+  }
+};
+
+global.TextDecoder = class {
+  decode(buffer) {
+    return Buffer.from(buffer).toString('utf-8');
+  }
+};
+
 jest.mock('@auth0/nextjs-auth0', () => {
   return {
     getSession: () => ({
